@@ -10,9 +10,7 @@ import { toast } from "sonner";
 import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { JSONPath } from "jsonpath-plus";
-import dynamic from "next/dynamic";
-
-const ReactJson = dynamic(() => import("react-json-view"), { ssr: false });
+import Editor from "@monaco-editor/react";
 
 export function JsonEditor() {
   const [input, setInput] = useState("");
@@ -229,22 +227,26 @@ export function JsonEditor() {
                 </>
               )}
             </div>
-            <div className="p-4 min-h-[400px] max-h-[600px] relative overflow-y-auto">
+            <div className="p-4 min-h-[400px] max-h-[600px] relative overflow-hidden">
               {output ? (
-                <ReactJson
-                  src={JSON.parse(searchResult || output)}
-                  theme={theme === "dark" ? "monokai" : "rjv-default"}
-                  name={false}
-                  displayDataTypes={false}
-                  enableClipboard={false}
-                  style={{
-                    backgroundColor: "transparent",
-                    fontSize: "0.875rem",
+                <Editor
+                  height="100%"
+                  defaultLanguage="json"
+                  value={searchResult || output}
+                  theme={theme === "dark" ? "vs-dark" : "light"}
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: true },
+                    folding: true,
+                    foldingHighlight: true,
+                    foldingStrategy: "auto",
+                    showFoldingControls: "always",
+                    matchBrackets: "always",
+                    automaticLayout: true,
+                    formatOnPaste: true,
+                    scrollBeyondLastLine: false,
                   }}
-                  collapsed={2}
-                  displayObjectSize={true}
-                  sortKeys={true}
-                  quotesOnKeys={false}
+                  className="min-h-[400px]"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
