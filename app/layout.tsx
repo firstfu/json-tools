@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Footer } from "@/components/footer";
 import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
@@ -22,7 +23,10 @@ export default function RootLayout({
     <html lang="zh-TW" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <div className="min-h-screen bg-background">{children}</div>
+          <div className="min-h-screen bg-background flex flex-col">
+            <div className="flex-grow">{children}</div>
+            <Footer />
+          </div>
           <Toaster />
           <Analytics />
         </ThemeProvider>
