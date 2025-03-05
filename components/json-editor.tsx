@@ -181,6 +181,51 @@ interface MonacoEditorType extends editor.IStandaloneCodeEditor {
   revealLineInCenter: (lineNumber: number) => void;
 }
 
+// 添加 JSON 轉 CSV 的工具函數
+const jsonToCSV = (jsonData: any): string => {
+  try {
+    // 確保輸入是陣列
+    const array = Array.isArray(jsonData) ? jsonData : [jsonData];
+    if (array.length === 0) return "";
+
+    // 獲取所有可能的欄位（扁平化處理）
+    const getFields = (obj: any, prefix = ""): string[] => {
+      let fields: string[] = [];
+      for (const key in obj) {
+        const value = obj[key];
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+          fields = [...fields, ...getFields(value, newKey)];
+        } else {
+          fields.push(newKey);
+        }
+      }
+      return fields;
+    };
+
+    // 從所有物件中收集唯一的欄位
+    const allFields = Array.from(new Set(array.reduce((fields: string[], item) => [...fields, ...getFields(item)], []))).sort();
+
+    // 獲取物件中特定路徑的值
+    const getNestedValue = (obj: any, path: string): string => {
+      const value = path.split(".").reduce((o, i) => (o ? o[i] : ""), obj);
+      if (value === null || value === undefined) return "";
+      if (Array.isArray(value)) return JSON.stringify(value);
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value).replace(/"/g, '""');
+    };
+
+    // 生成 CSV 內容
+    const header = allFields.join(",");
+    const rows = array.map(obj => allFields.map(field => `"${getNestedValue(obj, field)}"`).join(","));
+
+    return [header, ...rows].join("\n");
+  } catch (error) {
+    console.error("JSON to CSV conversion error:", error);
+    throw new Error("轉換 CSV 時發生錯誤");
+  }
+};
+
 export function JsonEditor() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
@@ -693,6 +738,29 @@ export function JsonEditor() {
                           <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(output)), "minified")}>
                             <Download className="h-4 w-4 mr-2" />
                             下載壓縮檔案
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              try {
+                                const jsonData = JSON.parse(output);
+                                const csv = jsonToCSV(jsonData);
+                                const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `json-to-csv-${new Date().getTime()}.csv`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                toast.success("CSV 下載成功");
+                              } catch (error) {
+                                toast.error(error instanceof Error ? error.message : "轉換 CSV 時發生錯誤");
+                              }
+                            }}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            下載為 CSV
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
