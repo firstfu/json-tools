@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2, History, X, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
+import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2, History, X, Maximize2, ChevronUp, ChevronDown, FileText } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
@@ -375,6 +375,166 @@ export function JsonEditor() {
     toast.success("下載成功");
   };
 
+  // 將 JSON 轉換為 CSV
+  const convertJsonToCsv = useCallback(() => {
+    try {
+      if (!output) {
+        toast.error("請先格式化 JSON");
+        return;
+      }
+
+      const parsed = JSON.parse(output);
+
+      // 處理不同類型的 JSON 資料
+      let csvContent = "";
+
+      // 處理陣列類型
+      if (Array.isArray(parsed)) {
+        // 如果陣列為空，提示用戶
+        if (parsed.length === 0) {
+          toast.error("JSON 陣列為空");
+          return;
+        }
+
+        // 獲取所有可能的欄位名稱（合併所有物件的鍵）
+        const allKeys = new Set<string>();
+        parsed.forEach(item => {
+          if (typeof item === "object" && item !== null) {
+            Object.keys(item).forEach(key => allKeys.add(key));
+          }
+        });
+
+        const headers = Array.from(allKeys);
+
+        // 如果沒有找到有效的欄位，可能是簡單值的陣列
+        if (headers.length === 0) {
+          // 處理簡單值的陣列 (數字、字串等)
+          csvContent =
+            "value\n" +
+            parsed
+              .map(item => {
+                if (typeof item === "string") {
+                  // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
+                  if (item.includes(",") || item.includes('"') || item.includes("\n")) {
+                    return `"${item.replace(/"/g, '""')}"`;
+                  }
+                  return item;
+                }
+                return String(item);
+              })
+              .join("\n");
+        } else {
+          // 創建 CSV 內容 (物件陣列)
+          csvContent = headers.join(",") + "\n";
+
+          parsed.forEach(item => {
+            const row = headers
+              .map(header => {
+                const value = item[header];
+                // 處理不同類型的值
+                if (value === undefined || value === null) {
+                  return "";
+                } else if (typeof value === "object") {
+                  return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+                } else if (typeof value === "string") {
+                  // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
+                  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                  }
+                  return value;
+                }
+                return String(value);
+              })
+              .join(",");
+            csvContent += row + "\n";
+          });
+        }
+      }
+      // 處理物件類型
+      else if (typeof parsed === "object" && parsed !== null) {
+        // 獲取物件的所有鍵
+        const keys = Object.keys(parsed);
+
+        if (keys.length === 0) {
+          toast.error("JSON 物件為空");
+          return;
+        }
+
+        // 創建 CSV 內容 (兩列：key 和 value)
+        csvContent = "key,value\n";
+
+        keys.forEach(key => {
+          const value = parsed[key];
+          let valueStr = "";
+
+          // 處理不同類型的值
+          if (value === undefined || value === null) {
+            valueStr = "";
+          } else if (typeof value === "object") {
+            valueStr = `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+          } else if (typeof value === "string") {
+            // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
+            if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+              valueStr = `"${value.replace(/"/g, '""')}"`;
+            } else {
+              valueStr = value;
+            }
+          } else {
+            valueStr = String(value);
+          }
+
+          // 處理鍵名中的特殊字符
+          let keyStr = key;
+          if (key.includes(",") || key.includes('"') || key.includes("\n")) {
+            keyStr = `"${key.replace(/"/g, '""')}"`;
+          }
+
+          csvContent += `${keyStr},${valueStr}\n`;
+        });
+      }
+      // 處理簡單值 (字串、數字、布林值等)
+      else {
+        csvContent = "value\n";
+        if (typeof parsed === "string") {
+          // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
+          if (parsed.includes(",") || parsed.includes('"') || parsed.includes("\n")) {
+            csvContent += `"${parsed.replace(/"/g, '""')}"`;
+          } else {
+            csvContent += parsed;
+          }
+        } else {
+          csvContent += String(parsed);
+        }
+      }
+
+      return csvContent;
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(`轉換失敗: ${error.message}`);
+      } else {
+        toast.error("轉換失敗");
+      }
+      return null;
+    }
+  }, [output]);
+
+  // 下載 CSV 檔案
+  const downloadCsv = useCallback(() => {
+    const csvContent = convertJsonToCsv();
+    if (!csvContent) return;
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `json-to-csv-${new Date().getTime()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("CSV 下載成功");
+  }, [convertJsonToCsv]);
+
   const addToHistory = useCallback(() => {
     if (!output) return;
 
@@ -633,10 +793,15 @@ export function JsonEditor() {
                     </Button>
                   </div>
                   {output && (
-                    <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
-                      <History className="h-3 w-3" />
-                      保存
-                    </Button>
+                    <>
+                      <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
+                        <History className="h-3 w-3" />
+                        保存
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={downloadCsv} className="gap-2">
+                        <FileText className="h-3 w-3" />轉 CSV
+                      </Button>
+                    </>
                   )}
                 </div>
                 <div className="flex gap-4">
@@ -677,6 +842,10 @@ export function JsonEditor() {
                         <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(output)), "minified")}>
                           <Download className="h-4 w-4 mr-2" />
                           下載壓縮檔案
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={downloadCsv}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          下載為 CSV
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
