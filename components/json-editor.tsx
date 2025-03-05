@@ -553,7 +553,7 @@ export function JsonEditor() {
             <div className="flex-1">
               <Textarea
                 placeholder="在此輸入 JSON..."
-                className="h-full w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto max-h-[600px]"
+                className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto"
                 value={input}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
               />
@@ -690,7 +690,7 @@ export function JsonEditor() {
                     defaultLanguage="json"
                     value={output}
                     theme={theme === "dark" ? "vs-dark" : "light"}
-                    className="min-h-[400px] max-h-[600px] overflow-y-auto"
+                    className="min-h-[600px]"
                     onMount={handleEditorDidMount}
                     options={{
                       readOnly: true,
