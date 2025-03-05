@@ -159,12 +159,14 @@ export function JsonEditor() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [jsonPath, setJsonPath] = useState("");
-  const [searchResult, setSearchResult] = useState<string>("");
+  const [searchText, setSearchText] = useState("");
+  const [matchCase, setMatchCase] = useState(true);
+  const [matchWholeWord, setMatchWholeWord] = useState(true);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<any>(null);
   const { theme } = useTheme();
 
   const sensors = useSensors(
@@ -328,22 +330,6 @@ export function JsonEditor() {
     toast.success("下載成功");
   };
 
-  const searchJsonPath = useCallback(() => {
-    try {
-      if (!output || !jsonPath.trim()) {
-        setSearchResult("");
-        return;
-      }
-      const parsed = JSON.parse(output);
-      const result = JSONPath({ path: jsonPath, json: parsed });
-      setSearchResult(JSON.stringify(result, null, 2));
-      setError(null);
-    } catch (err) {
-      setError((err as Error).message);
-      setSearchResult("");
-    }
-  }, [output, jsonPath]);
-
   const addToHistory = useCallback(() => {
     if (!output) return;
 
@@ -375,6 +361,53 @@ export function JsonEditor() {
   const loadFromHistory = useCallback((content: string) => {
     setInput(content);
   }, []);
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+  };
+
+  const handleSearch = useCallback(() => {
+    if (!editorRef.current || !searchText) return;
+
+    const editor = editorRef.current;
+    const model = editor.getModel();
+    const decorations = editor.getModel().getAllDecorations();
+
+    // 清除之前的裝飾
+    editor.deltaDecorations(
+      decorations.map((d: { id: string }) => d.id),
+      []
+    );
+
+    if (searchText) {
+      const matches = model.findMatches(
+        searchText,
+        false, // searchOnlyEditableRange
+        matchCase, // isRegex
+        matchWholeWord, // matchCase
+        null, // wordSeparators
+        true // captureMatches
+      );
+
+      if (matches.length > 0) {
+        // 添加新的高亮裝飾
+        editor.deltaDecorations(
+          [],
+          matches.map((match: { range: any }) => ({
+            range: match.range,
+            options: {
+              inlineClassName: "findMatch",
+              className: "findMatch",
+              stickiness: 1,
+            },
+          }))
+        );
+
+        // 滾動到第一個匹配項
+        editor.revealLineInCenter(matches[0].range.startLineNumber);
+      }
+    }
+  }, [searchText, matchCase, matchWholeWord]);
 
   return (
     <div className="space-y-6">
@@ -438,7 +471,6 @@ export function JsonEditor() {
                     setInput("");
                     setOutput("");
                     setError(null);
-                    setSearchResult("");
                   }}
                   className="h-8 w-8"
                 >
@@ -473,7 +505,6 @@ export function JsonEditor() {
                   setInput("");
                   setOutput("");
                   setError(null);
-                  setSearchResult("");
                 }}
                 className="gap-2"
               >
@@ -492,23 +523,45 @@ export function JsonEditor() {
         <div className="space-y-6">
           <Card className="overflow-hidden border-2 border-muted flex flex-col">
             <div className="bg-muted/50 p-3 border-b border-border">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="輸入 JSONPath (例如: $.store.book[0].title)"
-                  value={jsonPath}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJsonPath(e.target.value)}
-                  className="h-8"
-                />
-                <Button variant="secondary" size="sm" onClick={searchJsonPath} className="gap-2">
-                  <Search className="h-3 w-3" />
-                  搜尋
-                </Button>
-                {output && (
-                  <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
-                    <History className="h-3 w-3" />
-                    保存
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="輸入要搜尋的文字..."
+                    value={searchText}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                      }
+                    }}
+                    className="h-8"
+                  />
+                  <Button variant="secondary" size="sm" onClick={handleSearch} className="gap-2">
+                    <Search className="h-3 w-3" />
+                    搜尋
                   </Button>
-                )}
+                  {output && (
+                    <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
+                      <History className="h-3 w-3" />
+                      保存
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} className="h-4 w-4 rounded border-muted" />
+                    區分大小寫
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={matchWholeWord}
+                      onChange={e => setMatchWholeWord(e.target.checked)}
+                      className="h-4 w-4 rounded border-muted"
+                    />
+                    全字匹配
+                  </label>
+                </div>
               </div>
             </div>
             <div className="flex-1 relative">
@@ -518,7 +571,7 @@ export function JsonEditor() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard(searchResult || output)}
+                      onClick={() => copyToClipboard(output)}
                       className="h-8 w-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
                     >
                       <Copy className="h-4 w-4" />
@@ -530,11 +583,11 @@ export function JsonEditor() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => downloadJson(searchResult || output, "formatted")}>
+                        <DropdownMenuItem onClick={() => downloadJson(output, "formatted")}>
                           <Download className="h-4 w-4 mr-2" />
                           下載格式化檔案
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(searchResult || output)), "minified")}>
+                        <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(output)), "minified")}>
                           <Download className="h-4 w-4 mr-2" />
                           下載壓縮檔案
                         </DropdownMenuItem>
@@ -548,9 +601,10 @@ export function JsonEditor() {
                   <Editor
                     height="600px"
                     defaultLanguage="json"
-                    value={searchResult || output}
+                    value={output}
                     theme={theme === "dark" ? "vs-dark" : "light"}
                     className="min-h-[400px] max-h-[600px] overflow-y-auto"
+                    onMount={handleEditorDidMount}
                     options={{
                       readOnly: true,
                       minimap: { enabled: true },
@@ -562,6 +616,14 @@ export function JsonEditor() {
                       automaticLayout: true,
                       formatOnPaste: true,
                       scrollBeyondLastLine: false,
+                      find: {
+                        addExtraSpaceOnTop: false,
+                        seedSearchStringFromSelection: "never",
+                        cursorMoveOnType: false,
+                        autoFindInSelection: "never",
+                      },
+                      // 添加自定義 CSS 類別
+                      extraEditorClassName: "custom-find-match",
                     }}
                   />
                 ) : (
@@ -570,14 +632,6 @@ export function JsonEditor() {
               </div>
             </div>
           </Card>
-          {searchResult && (
-            <Card className="p-4 bg-muted/50">
-              <p className="text-sm text-muted-foreground">
-                查詢結果：
-                {Array.isArray(JSON.parse(searchResult)) ? `找到 ${JSON.parse(searchResult).length} 個結果` : "找到 1 個結果"}
-              </p>
-            </Card>
-          )}
         </div>
       </div>
     </div>
