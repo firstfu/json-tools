@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2, History, X, Maximize2 } from "lucide-react";
+import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2, History, X, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { JSONPath } from "jsonpath-plus";
 import Editor from "@monaco-editor/react";
@@ -162,6 +162,8 @@ export function JsonEditor() {
   const [searchText, setSearchText] = useState("");
   const [matchCase, setMatchCase] = useState(true);
   const [matchWholeWord, setMatchWholeWord] = useState(true);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -367,7 +369,11 @@ export function JsonEditor() {
   };
 
   const handleSearch = useCallback(() => {
-    if (!editorRef.current || !searchText) return;
+    if (!editorRef.current || !searchText) {
+      setTotalMatches(0);
+      setCurrentMatchIndex(0);
+      return;
+    }
 
     const editor = editorRef.current;
     const model = editor.getModel();
@@ -389,6 +395,9 @@ export function JsonEditor() {
         true // captureMatches
       );
 
+      setTotalMatches(matches.length);
+      setCurrentMatchIndex(matches.length > 0 ? 1 : 0);
+
       if (matches.length > 0) {
         // 添加新的高亮裝飾
         editor.deltaDecorations(
@@ -408,6 +417,30 @@ export function JsonEditor() {
       }
     }
   }, [searchText, matchCase, matchWholeWord]);
+
+  const navigateMatch = useCallback(
+    (direction: "next" | "prev") => {
+      if (!editorRef.current || totalMatches === 0) return;
+
+      const editor = editorRef.current;
+      const model = editor.getModel();
+      const matches = model.findMatches(searchText, false, matchCase, matchWholeWord, null, true);
+
+      if (matches.length > 0) {
+        let newIndex;
+        if (direction === "next") {
+          newIndex = (currentMatchIndex % matches.length) + 1;
+        } else {
+          newIndex = currentMatchIndex - 1 || matches.length;
+        }
+        setCurrentMatchIndex(newIndex);
+
+        const match = matches[newIndex - 1];
+        editor.revealLineInCenter(match.range.startLineNumber);
+      }
+    },
+    [searchText, matchCase, matchWholeWord, currentMatchIndex, totalMatches]
+  );
 
   return (
     <div className="space-y-6">
@@ -531,15 +564,38 @@ export function JsonEditor() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === "Enter") {
-                        handleSearch();
+                        if (e.shiftKey) {
+                          navigateMatch("prev");
+                        } else {
+                          if (totalMatches === 0) {
+                            handleSearch();
+                          } else {
+                            navigateMatch("next");
+                          }
+                        }
                       }
                     }}
                     className="h-8"
                   />
-                  <Button variant="secondary" size="sm" onClick={handleSearch} className="gap-2">
-                    <Search className="h-3 w-3" />
-                    搜尋
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {totalMatches > 0 && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => navigateMatch("prev")} className="h-8 px-2">
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => navigateMatch("next")} className="h-8 px-2">
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          {currentMatchIndex}/{totalMatches}
+                        </span>
+                      </>
+                    )}
+                    <Button variant="secondary" size="sm" onClick={handleSearch} className="gap-2">
+                      <Search className="h-3 w-3" />
+                      搜尋
+                    </Button>
+                  </div>
                   {output && (
                     <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
                       <History className="h-3 w-3" />
