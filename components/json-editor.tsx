@@ -375,166 +375,6 @@ export function JsonEditor() {
     toast.success("下載成功");
   };
 
-  // 將 JSON 轉換為 CSV
-  const convertJsonToCsv = useCallback(() => {
-    try {
-      if (!output) {
-        toast.error("請先格式化 JSON");
-        return;
-      }
-
-      const parsed = JSON.parse(output);
-
-      // 處理不同類型的 JSON 資料
-      let csvContent = "";
-
-      // 處理陣列類型
-      if (Array.isArray(parsed)) {
-        // 如果陣列為空，提示用戶
-        if (parsed.length === 0) {
-          toast.error("JSON 陣列為空");
-          return;
-        }
-
-        // 獲取所有可能的欄位名稱（合併所有物件的鍵）
-        const allKeys = new Set<string>();
-        parsed.forEach(item => {
-          if (typeof item === "object" && item !== null) {
-            Object.keys(item).forEach(key => allKeys.add(key));
-          }
-        });
-
-        const headers = Array.from(allKeys);
-
-        // 如果沒有找到有效的欄位，可能是簡單值的陣列
-        if (headers.length === 0) {
-          // 處理簡單值的陣列 (數字、字串等)
-          csvContent =
-            "value\n" +
-            parsed
-              .map(item => {
-                if (typeof item === "string") {
-                  // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
-                  if (item.includes(",") || item.includes('"') || item.includes("\n")) {
-                    return `"${item.replace(/"/g, '""')}"`;
-                  }
-                  return item;
-                }
-                return String(item);
-              })
-              .join("\n");
-        } else {
-          // 創建 CSV 內容 (物件陣列)
-          csvContent = headers.join(",") + "\n";
-
-          parsed.forEach(item => {
-            const row = headers
-              .map(header => {
-                const value = item[header];
-                // 處理不同類型的值
-                if (value === undefined || value === null) {
-                  return "";
-                } else if (typeof value === "object") {
-                  return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
-                } else if (typeof value === "string") {
-                  // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
-                  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-                    return `"${value.replace(/"/g, '""')}"`;
-                  }
-                  return value;
-                }
-                return String(value);
-              })
-              .join(",");
-            csvContent += row + "\n";
-          });
-        }
-      }
-      // 處理物件類型
-      else if (typeof parsed === "object" && parsed !== null) {
-        // 獲取物件的所有鍵
-        const keys = Object.keys(parsed);
-
-        if (keys.length === 0) {
-          toast.error("JSON 物件為空");
-          return;
-        }
-
-        // 創建 CSV 內容 (兩列：key 和 value)
-        csvContent = "key,value\n";
-
-        keys.forEach(key => {
-          const value = parsed[key];
-          let valueStr = "";
-
-          // 處理不同類型的值
-          if (value === undefined || value === null) {
-            valueStr = "";
-          } else if (typeof value === "object") {
-            valueStr = `"${JSON.stringify(value).replace(/"/g, '""')}"`;
-          } else if (typeof value === "string") {
-            // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
-            if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-              valueStr = `"${value.replace(/"/g, '""')}"`;
-            } else {
-              valueStr = value;
-            }
-          } else {
-            valueStr = String(value);
-          }
-
-          // 處理鍵名中的特殊字符
-          let keyStr = key;
-          if (key.includes(",") || key.includes('"') || key.includes("\n")) {
-            keyStr = `"${key.replace(/"/g, '""')}"`;
-          }
-
-          csvContent += `${keyStr},${valueStr}\n`;
-        });
-      }
-      // 處理簡單值 (字串、數字、布林值等)
-      else {
-        csvContent = "value\n";
-        if (typeof parsed === "string") {
-          // 如果字串包含逗號、引號或換行符，則用引號包裹並轉義引號
-          if (parsed.includes(",") || parsed.includes('"') || parsed.includes("\n")) {
-            csvContent += `"${parsed.replace(/"/g, '""')}"`;
-          } else {
-            csvContent += parsed;
-          }
-        } else {
-          csvContent += String(parsed);
-        }
-      }
-
-      return csvContent;
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(`轉換失敗: ${error.message}`);
-      } else {
-        toast.error("轉換失敗");
-      }
-      return null;
-    }
-  }, [output]);
-
-  // 下載 CSV 檔案
-  const downloadCsv = useCallback(() => {
-    const csvContent = convertJsonToCsv();
-    if (!csvContent) return;
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `json-to-csv-${new Date().getTime()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("CSV 下載成功");
-  }, [convertJsonToCsv]);
-
   const addToHistory = useCallback(() => {
     if (!output) return;
 
@@ -639,255 +479,263 @@ export function JsonEditor() {
   );
 
   return (
-    <div className="space-y-6">
-      {history.length > 0 && (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <SortableContext items={history.map(item => item.id)}>
-              {history.map(item => (
-                <SortableCard
-                  key={item.id}
-                  item={item}
-                  onRemove={removeFromHistory}
-                  onLoad={loadFromHistory}
-                  onSelect={setSelectedItem}
-                  onNameChange={updateHistoryName}
-                  editingName={editingName}
-                  setEditingName={setEditingName}
+    <div id="json-editor-section" className="w-full">
+      <div className="space-y-6">
+        {history.length > 0 && (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SortableContext items={history.map(item => item.id)}>
+                {history.map(item => (
+                  <SortableCard
+                    key={item.id}
+                    item={item}
+                    onRemove={removeFromHistory}
+                    onLoad={loadFromHistory}
+                    onSelect={setSelectedItem}
+                    onNameChange={updateHistoryName}
+                    editingName={editingName}
+                    setEditingName={setEditingName}
+                  />
+                ))}
+              </SortableContext>
+            </div>
+          </DndContext>
+        )}
+
+        <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
+          <DialogContent className="max-w-4xl h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>{selectedItem?.name || "JSON 內容"}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 min-h-0">
+              {selectedItem && (
+                <MonacoEditor
+                  height="calc(80vh - 80px)"
+                  defaultLanguage="json"
+                  value={selectedItem.content}
+                  theme={theme === "dark" ? "vs-dark" : "light"}
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: true },
+                    folding: true,
+                    lineNumbers: "on",
+                    renderLineHighlight: "all",
+                    scrollBeyondLastLine: false,
+                  }}
                 />
-              ))}
-            </SortableContext>
-          </div>
-        </DndContext>
-      )}
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-        <DialogContent className="max-w-4xl h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>{selectedItem?.name || "JSON 內容"}</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 min-h-0">
-            {selectedItem && (
-              <MonacoEditor
-                height="calc(80vh - 80px)"
-                defaultLanguage="json"
-                value={selectedItem.content}
-                theme={theme === "dark" ? "vs-dark" : "light"}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: true },
-                  folding: true,
-                  lineNumbers: "on",
-                  renderLineHighlight: "all",
-                  scrollBeyondLastLine: false,
-                }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 grid-rows-1">
-        <div className="flex flex-col">
-          <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
-            <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
-              <h2 className="text-sm font-medium">輸入 JSON</h2>
-              <div className="flex items-center gap-2">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col md:w-1/2">
+            <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
+              <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
+                <h2 className="text-sm font-medium">輸入 JSON</h2>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setInput("");
+                      setOutput("");
+                      setError(null);
+                    }}
+                    className="h-8 w-8"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="h-8 w-8">
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col">
+                <Textarea
+                  placeholder={`{
+  "name": "小明",
+  "age": 25,
+  "isStudent": true,
+  "hobbies": ["閱讀", "游泳", "旅行"],
+  "address": {
+    "city": "台北",
+    "zipCode": "10617"
+  },
+  "contact": {
+    "email": "example@mail.com",
+    "phone": "0912-345-678"
+  }
+}`}
+                  className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto flex-grow"
+                  value={input}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+                />
+                <input type="file" ref={fileInputRef} className="hidden" accept="application/json,.json" onChange={handleFileUpload} />
+              </div>
+              <div className="bg-muted/50 p-3 border-t border-border flex items-center gap-2">
+                <Button onClick={formatJson} className="gap-2" variant="secondary">
+                  <FileJson className="h-4 w-4" />
+                  格式化
+                </Button>
+                <Button variant="outline" onClick={minifyJson} className="gap-2">
+                  <Minimize2 className="h-4 w-4" />
+                  壓縮
+                </Button>
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
                   onClick={() => {
                     setInput("");
                     setOutput("");
                     setError(null);
                   }}
-                  className="h-8 w-8"
+                  className="gap-2"
                 >
                   <X className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="h-8 w-8">
-                  <Upload className="h-4 w-4" />
+                  清除
                 </Button>
               </div>
-            </div>
-            <div className="flex-1 flex flex-col">
-              <Textarea
-                placeholder="在此輸入 JSON..."
-                className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto flex-grow"
-                value={input}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
-              />
-              <input type="file" ref={fileInputRef} className="hidden" accept="application/json,.json" onChange={handleFileUpload} />
-            </div>
-            <div className="bg-muted/50 p-3 border-t border-border flex items-center gap-2">
-              <Button onClick={formatJson} className="gap-2" variant="secondary">
-                <FileJson className="h-4 w-4" />
-                格式化
-              </Button>
-              <Button variant="outline" onClick={minifyJson} className="gap-2">
-                <Minimize2 className="h-4 w-4" />
-                壓縮
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setInput("");
-                  setOutput("");
-                  setError(null);
-                }}
-                className="gap-2"
-              >
-                <X className="h-4 w-4" />
-                清除
-              </Button>
-            </div>
-          </Card>
-          {error && (
-            <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-950/20 mt-4">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </Card>
-          )}
-        </div>
+            {error && (
+              <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-950/20 mt-4">
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              </Card>
+            )}
+          </div>
 
-        <div className="flex flex-col">
-          <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
-            <div className="bg-muted/50 p-3 border-b border-border">
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="輸入要搜尋的文字..."
-                    value={searchText}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") {
-                        if (e.shiftKey) {
-                          navigateMatch("prev");
-                        } else {
-                          if (totalMatches === 0) {
-                            handleSearch();
+          <div className="flex flex-col md:w-1/2">
+            <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
+              <div className="bg-muted/50 p-3 border-b border-border">
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="輸入要搜尋的文字..."
+                      value={searchText}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          if (e.shiftKey) {
+                            navigateMatch("prev");
                           } else {
-                            navigateMatch("next");
+                            if (totalMatches === 0) {
+                              handleSearch();
+                            } else {
+                              navigateMatch("next");
+                            }
                           }
                         }
-                      }
-                    }}
-                    className="h-8"
-                  />
-                  <div className="flex items-center gap-1">
-                    {totalMatches > 0 && (
+                      }}
+                      className="h-8"
+                    />
+                    <div className="flex items-center gap-1">
+                      {totalMatches > 0 && (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => navigateMatch("prev")} className="h-8 px-2">
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => navigateMatch("next")} className="h-8 px-2">
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                          <span className="text-sm text-muted-foreground whitespace-nowrap">
+                            {currentMatchIndex}/{totalMatches}
+                          </span>
+                        </>
+                      )}
+                      <Button variant="secondary" size="sm" onClick={handleSearch} className="gap-2">
+                        <Search className="h-3 w-3" />
+                        搜尋
+                      </Button>
+                    </div>
+                    {output && (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => navigateMatch("prev")} className="h-8 px-2">
-                          <ChevronUp className="h-4 w-4" />
+                        <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
+                          <History className="h-3 w-3" />
+                          保存
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => navigateMatch("next")} className="h-8 px-2">
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">
-                          {currentMatchIndex}/{totalMatches}
-                        </span>
                       </>
                     )}
-                    <Button variant="secondary" size="sm" onClick={handleSearch} className="gap-2">
-                      <Search className="h-3 w-3" />
-                      搜尋
-                    </Button>
                   </div>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} className="h-4 w-4 rounded border-muted" />
+                      區分大小寫
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <input type="checkbox" checked={matchWholeWord} onChange={e => setMatchWholeWord(e.target.checked)} className="h-4 w-4 rounded border-muted" />
+                      全字匹配
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 relative">
+                <div className="absolute right-4 top-4 flex flex-col gap-2 z-10">
                   {output && (
                     <>
-                      <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
-                        <History className="h-3 w-3" />
-                        保存
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => copyToClipboard(output)}
+                        className="h-8 w-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                      >
+                        <Copy className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={downloadCsv} className="gap-2">
-                        <FileText className="h-3 w-3" />轉 CSV
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="h-8 w-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => downloadJson(output, "formatted")}>
+                            <Download className="h-4 w-4 mr-2" />
+                            下載格式化檔案
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(output)), "minified")}>
+                            <Download className="h-4 w-4 mr-2" />
+                            下載壓縮檔案
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   )}
                 </div>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} className="h-4 w-4 rounded border-muted" />
-                    區分大小寫
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <input type="checkbox" checked={matchWholeWord} onChange={e => setMatchWholeWord(e.target.checked)} className="h-4 w-4 rounded border-muted" />
-                    全字匹配
-                  </label>
+                <div className="h-full flex flex-col">
+                  {output ? (
+                    <MonacoEditor
+                      height="600px"
+                      defaultLanguage="json"
+                      value={output}
+                      theme={theme === "dark" ? "vs-dark" : "light"}
+                      className="min-h-[600px] flex-grow"
+                      onMount={handleEditorDidMount}
+                      options={{
+                        readOnly: true,
+                        minimap: { enabled: true },
+                        folding: true,
+                        foldingHighlight: true,
+                        foldingStrategy: "auto",
+                        showFoldingControls: "always",
+                        matchBrackets: "always",
+                        automaticLayout: true,
+                        formatOnPaste: true,
+                        scrollBeyondLastLine: false,
+                        find: {
+                          addExtraSpaceOnTop: false,
+                          seedSearchStringFromSelection: "never",
+                          cursorMoveOnType: false,
+                          autoFindInSelection: "never",
+                        },
+                        // 添加自定義 CSS 類別
+                        extraEditorClassName: "custom-find-match",
+                      }}
+                    />
+                  ) : (
+                    <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 font-mono text-muted-foreground text-sm flex-grow">格式化結果將顯示在這裡...</div>
+                  )}
                 </div>
               </div>
-            </div>
-            <div className="flex-1 relative">
-              <div className="absolute right-4 top-4 flex flex-col gap-2 z-10">
-                {output && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(output)}
-                      className="h-8 w-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => downloadJson(output, "formatted")}>
-                          <Download className="h-4 w-4 mr-2" />
-                          下載格式化檔案
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(output)), "minified")}>
-                          <Download className="h-4 w-4 mr-2" />
-                          下載壓縮檔案
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={downloadCsv}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          下載為 CSV
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
-              </div>
-              <div className="h-full flex flex-col">
-                {output ? (
-                  <MonacoEditor
-                    height="600px"
-                    defaultLanguage="json"
-                    value={output}
-                    theme={theme === "dark" ? "vs-dark" : "light"}
-                    className="min-h-[600px] flex-grow"
-                    onMount={handleEditorDidMount}
-                    options={{
-                      readOnly: true,
-                      minimap: { enabled: true },
-                      folding: true,
-                      foldingHighlight: true,
-                      foldingStrategy: "auto",
-                      showFoldingControls: "always",
-                      matchBrackets: "always",
-                      automaticLayout: true,
-                      formatOnPaste: true,
-                      scrollBeyondLastLine: false,
-                      find: {
-                        addExtraSpaceOnTop: false,
-                        seedSearchStringFromSelection: "never",
-                        cursorMoveOnType: false,
-                        autoFindInSelection: "never",
-                      },
-                      // 添加自定義 CSS 類別
-                      extraEditorClassName: "custom-find-match",
-                    }}
-                  />
-                ) : (
-                  <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 font-mono text-muted-foreground text-sm flex-grow">格式化結果將顯示在這裡...</div>
-                )}
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
