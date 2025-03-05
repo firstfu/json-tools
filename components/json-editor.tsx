@@ -467,6 +467,19 @@ export function JsonEditor() {
                 <Minimize2 className="h-4 w-4" />
                 壓縮
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setInput("");
+                  setOutput("");
+                  setError(null);
+                  setSearchResult("");
+                }}
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
+                清除
+              </Button>
             </div>
           </Card>
           {error && (
