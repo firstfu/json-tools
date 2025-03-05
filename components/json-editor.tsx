@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2 } from "lucide-react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useTheme } from "next-themes";
 import { JSONPath } from "jsonpath-plus";
+import dynamic from "next/dynamic";
+
+const ReactJson = dynamic(() => import("react-json-view"), { ssr: false });
 
 export function JsonEditor() {
   const [input, setInput] = useState("");
@@ -156,7 +157,7 @@ export function JsonEditor() {
           <div className="p-4">
             <Textarea
               placeholder="在此輸入 JSON..."
-              className="min-h-[400px] font-mono resize-none border-0 focus-visible:ring-0"
+              className="min-h-[400px] max-h-[600px] font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto"
               value={input}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
             />
@@ -228,21 +229,23 @@ export function JsonEditor() {
                 </>
               )}
             </div>
-            <div className="p-4 min-h-[400px] relative">
+            <div className="p-4 min-h-[400px] max-h-[600px] relative overflow-y-auto">
               {output ? (
-                <SyntaxHighlighter
-                  language="json"
-                  style={theme === "dark" ? oneDark : oneLight}
-                  className="!m-0 !min-h-[400px] !bg-transparent !p-0"
-                  showLineNumbers
-                  customStyle={{
-                    margin: 0,
-                    background: "transparent",
+                <ReactJson
+                  src={JSON.parse(searchResult || output)}
+                  theme={theme === "dark" ? "monokai" : "rjv-default"}
+                  name={false}
+                  displayDataTypes={false}
+                  enableClipboard={false}
+                  style={{
+                    backgroundColor: "transparent",
                     fontSize: "0.875rem",
                   }}
-                >
-                  {searchResult || output}
-                </SyntaxHighlighter>
+                  collapsed={2}
+                  displayObjectSize={true}
+                  sortKeys={true}
+                  quotesOnKeys={false}
+                />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
               )}
