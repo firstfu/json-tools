@@ -430,9 +430,24 @@ export function JsonEditor() {
           <Card className="overflow-hidden border-2 border-muted flex flex-col">
             <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-medium">輸入 JSON</h2>
-              <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="h-8 w-8">
-                <Upload className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setInput("");
+                    setOutput("");
+                    setError(null);
+                    setSearchResult("");
+                  }}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="h-8 w-8">
+                  <Upload className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="flex-1">
               <Textarea
@@ -518,7 +533,7 @@ export function JsonEditor() {
               <div className="h-full">
                 {output ? (
                   <Editor
-                    height="100%"
+                    height="600px"
                     defaultLanguage="json"
                     value={searchResult || output}
                     theme={theme === "dark" ? "vs-dark" : "light"}
@@ -537,7 +552,7 @@ export function JsonEditor() {
                     }}
                   />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
+                  <div className="h-[600px] flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
                 )}
               </div>
             </div>
