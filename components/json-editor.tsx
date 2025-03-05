@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2, History, X, Maximize2, ChevronUp, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
-import { JSONPath } from "jsonpath-plus";
-import Editor from "@monaco-editor/react";
+import { Editor as MonacoEditor } from "@monaco-editor/react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -52,9 +51,9 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
   };
 
   return (
-    <Card style={style} className="relative overflow-hidden border border-muted group">
+    <Card style={style} className="relative overflow-hidden border-2 border-gray-300 dark:border-gray-600 shadow-md hover:shadow-lg transition-all group">
       {/* 標題區域 - 不可拖曳 */}
-      <div className="p-2 border-b border-border">
+      <div className="p-2 border-b-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 flex items-center gap-2">
             <Button
@@ -102,12 +101,7 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
             ) : (
               <div className="flex items-center gap-2 flex-1">
                 <h3 className="text-sm font-medium flex-1">{item.name}</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => setEditingName(item.id)}
-                >
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingName(item.id)}>
                   <FileJson className="h-3 w-3" />
                 </Button>
               </div>
@@ -131,7 +125,7 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
       <div ref={setNodeRef} className="cursor-move">
         <div className="h-[300px] overflow-y-auto p-3">
           {!isDragging && (
-            <Editor
+            <MonacoEditor
               key={editorKey}
               height="100%"
               defaultLanguage="json"
@@ -155,6 +149,38 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
   );
 }
 
+// Monaco 編輯器的範圍類型定義
+interface MonacoRange {
+  startLineNumber: number;
+  startColumn: number;
+  endLineNumber: number;
+  endColumn: number;
+}
+
+// Monaco 編輯器的裝飾選項類型定義
+interface MonacoDecorationOptions {
+  inlineClassName?: string;
+  className?: string;
+  stickiness?: number;
+}
+
+// 添加 Monaco 編輯器的類型定義
+interface MonacoEditorType {
+  getModel: () => {
+    findMatches: (
+      searchString: string,
+      searchOnlyEditableRange: boolean,
+      isRegex: boolean,
+      matchCase: boolean,
+      wordSeparators: string | null,
+      captureMatches: boolean
+    ) => Array<{ range: MonacoRange }>;
+    getAllDecorations: () => Array<{ id: string }>;
+  };
+  deltaDecorations: (oldDecorations: string[], newDecorations: Array<{ range: MonacoRange; options: MonacoDecorationOptions }>) => string[];
+  revealLineInCenter: (lineNumber: number) => void;
+}
+
 export function JsonEditor() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
@@ -168,7 +194,7 @@ export function JsonEditor() {
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<MonacoEditorType | null>(null);
   const { theme } = useTheme();
 
   const sensors = useSensors(
@@ -190,13 +216,13 @@ export function JsonEditor() {
       try {
         const parsedHistory = JSON.parse(savedHistory);
         // 轉換時間戳為 Date 對象
-        const historyWithDates = parsedHistory.map((item: any) => ({
+        const historyWithDates = parsedHistory.map((item: Omit<HistoryItem, "timestamp"> & { timestamp: string }) => ({
           ...item,
           timestamp: new Date(item.timestamp),
         }));
         setHistory(historyWithDates);
-      } catch (err) {
-        console.error("Error parsing history:", err);
+      } catch (error) {
+        console.error("Error parsing history:", error);
       }
     }
   }, []);
@@ -255,9 +281,13 @@ export function JsonEditor() {
             // 對對象的鍵進行排序
             return Object.keys(value)
               .sort()
-              .reduce(
-                (sorted: any, key) => {
-                  sorted[key] = value[key];
+              .reduce<Record<string, unknown> | unknown[]>(
+                (sorted, key) => {
+                  if (Array.isArray(sorted)) {
+                    (sorted as unknown[])[Number(key)] = value[key];
+                  } else {
+                    (sorted as Record<string, unknown>)[key] = value[key];
+                  }
                   return sorted;
                 },
                 Array.isArray(value) ? [] : {}
@@ -269,8 +299,12 @@ export function JsonEditor() {
       );
       setOutput(formatted);
       setError(null);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("未知錯誤");
+      }
     }
   }, [input]);
 
@@ -283,8 +317,12 @@ export function JsonEditor() {
       const parsed = JSON.parse(input);
       setOutput(JSON.stringify(parsed));
       setError(null);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("未知錯誤");
+      }
     }
   }, [input]);
 
@@ -300,8 +338,12 @@ export function JsonEditor() {
       try {
         const parsed = JSON.parse(text);
         setOutput(JSON.stringify(parsed, null, 2));
-      } catch (err) {
-        setError((err as Error).message);
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("未知錯誤");
+        }
       }
     };
     reader.onerror = () => {
@@ -314,7 +356,8 @@ export function JsonEditor() {
     try {
       await navigator.clipboard.writeText(text);
       toast.success("已複製到剪貼板");
-    } catch (err) {
+    } catch (error) {
+      console.log("🚀 ~ copyToClipboard ~ error:", error);
       toast.error("複製失敗");
     }
   };
@@ -364,7 +407,7 @@ export function JsonEditor() {
     setInput(content);
   }, []);
 
-  const handleEditorDidMount = (editor: any) => {
+  const handleEditorDidMount = (editor: MonacoEditorType) => {
     editorRef.current = editor;
   };
 
@@ -381,19 +424,12 @@ export function JsonEditor() {
 
     // 清除之前的裝飾
     editor.deltaDecorations(
-      decorations.map((d: { id: string }) => d.id),
+      decorations.map(d => d.id),
       []
     );
 
     if (searchText) {
-      const matches = model.findMatches(
-        searchText,
-        false, // searchOnlyEditableRange
-        matchCase, // isRegex
-        matchWholeWord, // matchCase
-        null, // wordSeparators
-        true // captureMatches
-      );
+      const matches = model.findMatches(searchText, false, matchCase, matchWholeWord, null, true);
 
       setTotalMatches(matches.length);
       setCurrentMatchIndex(matches.length > 0 ? 1 : 0);
@@ -402,7 +438,7 @@ export function JsonEditor() {
         // 添加新的高亮裝飾
         editor.deltaDecorations(
           [],
-          matches.map((match: { range: any }) => ({
+          matches.map(match => ({
             range: match.range,
             options: {
               inlineClassName: "findMatch",
@@ -472,7 +508,7 @@ export function JsonEditor() {
           </DialogHeader>
           <div className="flex-1 min-h-0">
             {selectedItem && (
-              <Editor
+              <MonacoEditor
                 height="calc(80vh - 80px)"
                 defaultLanguage="json"
                 value={selectedItem.content}
@@ -609,12 +645,7 @@ export function JsonEditor() {
                     區分大小寫
                   </label>
                   <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={matchWholeWord}
-                      onChange={e => setMatchWholeWord(e.target.checked)}
-                      className="h-4 w-4 rounded border-muted"
-                    />
+                    <input type="checkbox" checked={matchWholeWord} onChange={e => setMatchWholeWord(e.target.checked)} className="h-4 w-4 rounded border-muted" />
                     全字匹配
                   </label>
                 </div>
@@ -654,7 +685,7 @@ export function JsonEditor() {
               </div>
               <div className="h-full">
                 {output ? (
-                  <Editor
+                  <MonacoEditor
                     height="600px"
                     defaultLanguage="json"
                     value={output}
