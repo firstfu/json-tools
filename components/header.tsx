@@ -30,7 +30,7 @@ export function Header() {
           <p className="text-2xl text-muted-foreground">支援巢狀 JSON 字串的智慧格式化工具</p>
           <p className="text-xl text-muted-foreground">輕鬆處理多層 JSON 字串，自動識別並格式化巢狀結構</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
             <div className="relative group">
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 opacity-20 group-hover:opacity-40 transition duration-200" />
               <div className="relative p-6 bg-background/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg border border-border">
