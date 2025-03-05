@@ -227,27 +227,28 @@ export function JsonEditor() {
                 </>
               )}
             </div>
-            <div className="p-4 min-h-[400px] max-h-[600px] relative overflow-hidden">
+            <div className="p-4 h-[400px] relative">
               {output ? (
-                <Editor
-                  height="100%"
-                  defaultLanguage="json"
-                  value={searchResult || output}
-                  theme={theme === "dark" ? "vs-dark" : "light"}
-                  options={{
-                    readOnly: true,
-                    minimap: { enabled: true },
-                    folding: true,
-                    foldingHighlight: true,
-                    foldingStrategy: "auto",
-                    showFoldingControls: "always",
-                    matchBrackets: "always",
-                    automaticLayout: true,
-                    formatOnPaste: true,
-                    scrollBeyondLastLine: false,
-                  }}
-                  className="min-h-[400px]"
-                />
+                <div className="h-full">
+                  <Editor
+                    height="100%"
+                    defaultLanguage="json"
+                    value={searchResult || output}
+                    theme={theme === "dark" ? "vs-dark" : "light"}
+                    options={{
+                      readOnly: true,
+                      minimap: { enabled: true },
+                      folding: true,
+                      foldingHighlight: true,
+                      foldingStrategy: "auto",
+                      showFoldingControls: "always",
+                      matchBrackets: "always",
+                      automaticLayout: true,
+                      formatOnPaste: true,
+                      scrollBeyondLastLine: false,
+                    }}
+                  />
+                </div>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
               )}
