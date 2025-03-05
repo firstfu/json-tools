@@ -145,17 +145,17 @@ export function JsonEditor() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-6">
-        <Card className="overflow-hidden border-2 border-muted">
+        <Card className="overflow-hidden border-2 border-muted flex flex-col">
           <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
             <h2 className="text-sm font-medium">輸入 JSON</h2>
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="h-8 w-8">
               <Upload className="h-4 w-4" />
             </Button>
           </div>
-          <div className="p-4">
+          <div className="flex-1">
             <Textarea
               placeholder="在此輸入 JSON..."
-              className="min-h-[400px] max-h-[600px] font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto"
+              className="h-full w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto max-h-[600px]"
               value={input}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
             />
@@ -180,7 +180,7 @@ export function JsonEditor() {
       </div>
 
       <div className="space-y-6">
-        <Card className="overflow-hidden border-2 border-muted">
+        <Card className="overflow-hidden border-2 border-muted flex flex-col">
           <div className="bg-muted/50 p-3 border-b border-border">
             <div className="flex gap-2">
               <Input
@@ -195,7 +195,7 @@ export function JsonEditor() {
               </Button>
             </div>
           </div>
-          <div className="relative">
+          <div className="flex-1 relative">
             <div className="absolute right-4 top-4 flex flex-col gap-2 z-10">
               {output && (
                 <>
@@ -227,30 +227,29 @@ export function JsonEditor() {
                 </>
               )}
             </div>
-            <div className="p-4 h-[400px] relative">
+            <div className="h-full">
               {output ? (
-                <div className="h-full">
-                  <Editor
-                    height="100%"
-                    defaultLanguage="json"
-                    value={searchResult || output}
-                    theme={theme === "dark" ? "vs-dark" : "light"}
-                    options={{
-                      readOnly: true,
-                      minimap: { enabled: true },
-                      folding: true,
-                      foldingHighlight: true,
-                      foldingStrategy: "auto",
-                      showFoldingControls: "always",
-                      matchBrackets: "always",
-                      automaticLayout: true,
-                      formatOnPaste: true,
-                      scrollBeyondLastLine: false,
-                    }}
-                  />
-                </div>
+                <Editor
+                  height="100%"
+                  defaultLanguage="json"
+                  value={searchResult || output}
+                  theme={theme === "dark" ? "vs-dark" : "light"}
+                  className="min-h-[400px] max-h-[600px] overflow-y-auto"
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: true },
+                    folding: true,
+                    foldingHighlight: true,
+                    foldingStrategy: "auto",
+                    showFoldingControls: "always",
+                    matchBrackets: "always",
+                    automaticLayout: true,
+                    formatOnPaste: true,
+                    scrollBeyondLastLine: false,
+                  }}
+                />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
+                <div className="h-full flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
               )}
             </div>
           </div>
