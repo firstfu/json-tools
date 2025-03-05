@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -12,12 +12,147 @@ import { Upload, Copy, Download, MoreVertical, Search, FileJson, Minimize2, Hist
 import { useTheme } from "next-themes";
 import { JSONPath } from "jsonpath-plus";
 import Editor from "@monaco-editor/react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface HistoryItem {
   id: string;
   content: string;
   timestamp: Date;
   name: string;
+}
+
+interface SortableCardProps {
+  item: HistoryItem;
+  onRemove: (id: string) => void;
+  onLoad: (content: string) => void;
+  onSelect: (item: HistoryItem) => void;
+  onNameChange: (id: string, newName: string) => void;
+  editingName: string | null;
+  setEditingName: (id: string | null) => void;
+}
+
+function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName }: SortableCardProps) {
+  const { theme } = useTheme();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const [editorKey, setEditorKey] = useState(item.id);
+
+  // 當拖曳結束時重新生成 Editor
+  useEffect(() => {
+    if (!isDragging) {
+      setEditorKey(prev => `${prev}-${Date.now()}`);
+    }
+  }, [isDragging]);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card style={style} className="relative overflow-hidden border border-muted group">
+      {/* 標題區域 - 不可拖曳 */}
+      <div className="p-2 border-b border-border">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 cursor-move hover:bg-muted/50 rounded-sm group/drag flex items-center justify-center"
+              {...attributes}
+              {...listeners}
+            >
+              <div className="flex flex-col gap-[3px] opacity-50 group-hover/drag:opacity-100 transition-opacity">
+                <div className="flex gap-[3px]">
+                  <div className="w-1 h-1 rounded-full bg-foreground"></div>
+                  <div className="w-1 h-1 rounded-full bg-foreground"></div>
+                </div>
+                <div className="flex gap-[3px]">
+                  <div className="w-1 h-1 rounded-full bg-foreground"></div>
+                  <div className="w-1 h-1 rounded-full bg-foreground"></div>
+                </div>
+              </div>
+            </Button>
+            {editingName === item.id ? (
+              <Input
+                className="h-6 text-sm w-full"
+                defaultValue={item.name}
+                autoFocus
+                placeholder="輸入名稱..."
+                onBlur={e => {
+                  const value = e.target.value.trim();
+                  if (value) {
+                    onNameChange(item.id, value);
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    const value = e.currentTarget.value.trim();
+                    if (value) {
+                      onNameChange(item.id, value);
+                    }
+                  } else if (e.key === "Escape") {
+                    setEditingName(null);
+                  }
+                }}
+                onClick={e => e.stopPropagation()}
+              />
+            ) : (
+              <div className="flex items-center gap-2 flex-1">
+                <h3 className="text-sm font-medium flex-1">{item.name}</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => setEditingName(item.id)}
+                >
+                  <FileJson className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={() => onSelect(item)} className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Maximize2 className="h-3 w-3" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => onLoad(item.content)} className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Upload className="h-3 w-3" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => onRemove(item.id)} className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 內容區域 - 可拖曳 */}
+      <div ref={setNodeRef} className="cursor-move">
+        <div className="h-[300px] overflow-y-auto p-3">
+          {!isDragging && (
+            <Editor
+              key={editorKey}
+              height="100%"
+              defaultLanguage="json"
+              value={item.content}
+              theme={theme === "dark" ? "vs-dark" : "light"}
+              options={{
+                readOnly: true,
+                minimap: { enabled: false },
+                folding: true,
+                lineNumbers: "off",
+                renderLineHighlight: "none",
+                scrollBeyondLastLine: false,
+              }}
+              loading={<div className="h-full flex items-center justify-center text-muted-foreground">載入中...</div>}
+            />
+          )}
+        </div>
+        <div className="bg-muted/50 p-2 text-xs text-muted-foreground border-t border-border">保存時間：{item.timestamp.toLocaleString()}</div>
+      </div>
+    </Card>
+  );
 }
 
 export function JsonEditor() {
@@ -31,6 +166,62 @@ export function JsonEditor() {
   const [editingName, setEditingName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme } = useTheme();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 從 localStorage 加載數據
+  useEffect(() => {
+    const savedInput = localStorage.getItem("jsonEditorInput");
+    const savedOutput = localStorage.getItem("jsonEditorOutput");
+    const savedHistory = localStorage.getItem("jsonEditorHistory");
+
+    if (savedInput) setInput(savedInput);
+    if (savedOutput) setOutput(savedOutput);
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        // 轉換時間戳為 Date 對象
+        const historyWithDates = parsedHistory.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp),
+        }));
+        setHistory(historyWithDates);
+      } catch (err) {
+        console.error("Error parsing history:", err);
+      }
+    }
+  }, []);
+
+  // 保存數據到 localStorage
+  useEffect(() => {
+    localStorage.setItem("jsonEditorInput", input);
+  }, [input]);
+
+  useEffect(() => {
+    localStorage.setItem("jsonEditorOutput", output);
+  }, [output]);
+
+  useEffect(() => {
+    localStorage.setItem("jsonEditorHistory", JSON.stringify(history));
+  }, [history]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setHistory(items => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const formatJson = useCallback(() => {
     try {
@@ -188,76 +379,24 @@ export function JsonEditor() {
   return (
     <div className="space-y-6">
       {history.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {history.map(item => (
-            <Card key={item.id} className="relative overflow-hidden border border-muted group">
-              <div className="absolute right-2 top-2 flex gap-2 z-10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setSelectedItem(item)}
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Maximize2 className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => loadFromHistory(item.content)}
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Upload className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => removeFromHistory(item.id)}
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-              <div className="p-2 border-b border-border flex items-center justify-between">
-                {editingName === item.id ? (
-                  <Input
-                    className="h-6 text-sm"
-                    defaultValue={item.name}
-                    autoFocus
-                    onBlur={e => updateHistoryName(item.id, e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") {
-                        updateHistoryName(item.id, e.currentTarget.value);
-                      } else if (e.key === "Escape") {
-                        setEditingName(null);
-                      }
-                    }}
-                  />
-                ) : (
-                  <h3 className="text-sm font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => setEditingName(item.id)}>
-                    {item.name}
-                  </h3>
-                )}
-              </div>
-              <div className="h-[300px] overflow-y-auto p-3">
-                <Editor
-                  height="100%"
-                  defaultLanguage="json"
-                  value={item.content}
-                  theme={theme === "dark" ? "vs-dark" : "light"}
-                  options={{
-                    readOnly: true,
-                    minimap: { enabled: false },
-                    folding: true,
-                    lineNumbers: "off",
-                    renderLineHighlight: "none",
-                    scrollBeyondLastLine: false,
-                  }}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <SortableContext items={history.map(item => item.id)}>
+              {history.map(item => (
+                <SortableCard
+                  key={item.id}
+                  item={item}
+                  onRemove={removeFromHistory}
+                  onLoad={loadFromHistory}
+                  onSelect={setSelectedItem}
+                  onNameChange={updateHistoryName}
+                  editingName={editingName}
+                  setEditingName={setEditingName}
                 />
-              </div>
-              <div className="bg-muted/50 p-2 text-xs text-muted-foreground border-t border-border">保存時間：{item.timestamp.toLocaleString()}</div>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </SortableContext>
+          </div>
+        </DndContext>
       )}
 
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
