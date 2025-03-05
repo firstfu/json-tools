@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Twitter, Mail, Heart, Code, Coffee } from "lucide-react";
+import { Github, Twitter, Mail, Heart, Coffee } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
