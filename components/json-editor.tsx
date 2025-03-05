@@ -14,6 +14,8 @@ import { Editor as MonacoEditor } from "@monaco-editor/react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { OnMount } from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 
 interface HistoryItem {
   id: string;
@@ -149,7 +151,6 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
   );
 }
 
-// Monaco 編輯器的範圍類型定義
 interface MonacoRange {
   startLineNumber: number;
   startColumn: number;
@@ -157,16 +158,15 @@ interface MonacoRange {
   endColumn: number;
 }
 
-// Monaco 編輯器的裝飾選項類型定義
 interface MonacoDecorationOptions {
   inlineClassName?: string;
   className?: string;
   stickiness?: number;
 }
 
-// 添加 Monaco 編輯器的類型定義
-interface MonacoEditorType {
-  getModel: () => {
+// 更新 MonacoEditorType 介面
+interface MonacoEditorType extends editor.IStandaloneCodeEditor {
+  getModel: () => editor.ITextModel & {
     findMatches: (
       searchString: string,
       searchOnlyEditableRange: boolean,
@@ -407,8 +407,8 @@ export function JsonEditor() {
     setInput(content);
   }, []);
 
-  const handleEditorDidMount = (editor: MonacoEditorType) => {
-    editorRef.current = editor;
+  const handleEditorDidMount: OnMount = editor => {
+    editorRef.current = editor as unknown as MonacoEditorType;
   };
 
   const handleSearch = useCallback(() => {
@@ -527,9 +527,9 @@ export function JsonEditor() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <Card className="overflow-hidden border-2 border-muted flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 grid-rows-1">
+        <div className="flex flex-col">
+          <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
             <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-medium">輸入 JSON</h2>
               <div className="flex items-center gap-2">
@@ -550,10 +550,10 @@ export function JsonEditor() {
                 </Button>
               </div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col">
               <Textarea
                 placeholder="在此輸入 JSON..."
-                className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto"
+                className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto flex-grow"
                 value={input}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
               />
@@ -583,14 +583,14 @@ export function JsonEditor() {
             </div>
           </Card>
           {error && (
-            <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-950/20">
+            <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-950/20 mt-4">
               <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </Card>
           )}
         </div>
 
-        <div className="space-y-6">
-          <Card className="overflow-hidden border-2 border-muted flex flex-col">
+        <div className="flex flex-col">
+          <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
             <div className="bg-muted/50 p-3 border-b border-border">
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
@@ -683,14 +683,14 @@ export function JsonEditor() {
                   </>
                 )}
               </div>
-              <div className="h-full">
+              <div className="h-full flex flex-col">
                 {output ? (
                   <MonacoEditor
                     height="600px"
                     defaultLanguage="json"
                     value={output}
                     theme={theme === "dark" ? "vs-dark" : "light"}
-                    className="min-h-[600px]"
+                    className="min-h-[600px] flex-grow"
                     onMount={handleEditorDidMount}
                     options={{
                       readOnly: true,
@@ -714,7 +714,7 @@ export function JsonEditor() {
                     }}
                   />
                 ) : (
-                  <div className="h-[600px] flex items-center justify-center text-muted-foreground">格式化結果將顯示在這裡...</div>
+                  <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 font-mono text-muted-foreground text-sm flex-grow">格式化結果將顯示在這裡...</div>
                 )}
               </div>
             </div>

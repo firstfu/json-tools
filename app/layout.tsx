@@ -4,6 +4,8 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
+import { Analytics } from "@vercel/analytics/next";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -22,6 +24,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <div className="min-h-screen bg-background">{children}</div>
           <Toaster />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
