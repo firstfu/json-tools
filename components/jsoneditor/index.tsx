@@ -9,7 +9,6 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { toast } from "sonner";
 import type { DragEndEvent } from "@dnd-kit/core";
-import type { editor } from "monaco-editor";
 import { useTranslations } from "@/app/i18n/utils";
 import { SortableCard } from "./SortableCard";
 import { JsonInput } from "./JsonInput";
@@ -248,7 +247,7 @@ export function JsonEditor() {
     setInput(content);
   }, []);
 
-  const handleEditorDidMount: EditorOnMount = (editor, monaco) => {
+  const handleEditorDidMount: EditorOnMount = editor => {
     editorRef.current = editor as unknown as MonacoEditorType;
   };
 
@@ -319,7 +318,6 @@ export function JsonEditor() {
             handleSearch={handleSearch}
             navigateMatch={navigateMatch}
             addToHistory={addToHistory}
-            editorRef={editorRef}
             handleEditorDidMount={handleEditorDidMount}
             t={t}
           />

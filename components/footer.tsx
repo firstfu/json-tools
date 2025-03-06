@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Mail, Heart, Coffee } from "lucide-react";
+import { Mail, Heart, Coffee } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "@/app/i18n/utils";
 
@@ -153,7 +153,7 @@ export function Footer() {
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">{t("聯絡我們")}</h3>
             <div className="flex space-x-4">
-              <Link
+              {/* <Link
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -161,7 +161,7 @@ export function Footer() {
               >
                 <Github className="h-5 w-5" />
                 <span className="sr-only">GitHub</span>
-              </Link>
+              </Link> */}
 
               <Link href="mailto:firefirstfu@gmail.com" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="h-5 w-5" />

@@ -1,5 +1,5 @@
 import { Header } from "@/components/header";
-import { JsonEditor } from "@/components/json-editor";
+import { JsonEditor } from "@/components/jsoneditor";
 import { Footer } from "@/components/footer";
 
 export default function Home() {

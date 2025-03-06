@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Copy, Download, MoreVertical, Search, History, ChevronUp, ChevronDown, FileText } from "lucide-react";
-import type { MonacoEditorType, EditorOnMount } from "./types";
-import { jsonToCSV } from "./utils";
 import type { TranslationKey } from "@/app/i18n/utils";
+import type { EditorOnMount } from "./types";
+import { jsonToCSV } from "./utils";
 
 interface JsonOutputProps {
   output: string;
@@ -26,7 +26,6 @@ interface JsonOutputProps {
   handleSearch: () => void;
   navigateMatch: (direction: "next" | "prev") => void;
   addToHistory: () => void;
-  editorRef: React.MutableRefObject<MonacoEditorType | null>;
   handleEditorDidMount: EditorOnMount;
   t: (key: TranslationKey) => string;
 }
@@ -44,7 +43,6 @@ export function JsonOutput({
   handleSearch,
   navigateMatch,
   addToHistory,
-  editorRef,
   handleEditorDidMount,
   t,
 }: JsonOutputProps) {
