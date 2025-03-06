@@ -216,11 +216,11 @@ export function JsonEditor() {
   );
 
   const addToHistory = useCallback(() => {
-    if (!output) return;
+    if (!output) return false;
 
-    if (history.length >= 6) {
-      toast.error(t("已達到最大歷史記錄數量（6個）"));
-      return;
+    if (history.length >= 3) {
+      toast.error(t("已達到最大歷史記錄數量（3個）"));
+      return false;
     }
 
     const newItem: HistoryItem = {
@@ -231,7 +231,7 @@ export function JsonEditor() {
     };
 
     setHistory(prev => [newItem, ...prev]);
-    toast.success(t("已添加到歷史記錄"));
+    return true;
   }, [output, history, t]);
 
   const updateHistoryName = useCallback((id: string, newName: string) => {

@@ -37,7 +37,7 @@ export const en = {
   複製失敗: "Copy failed",
   下載成功: "Download successful",
   已添加到歷史記錄: "Added to history",
-  "已達到最大歷史記錄數量（6個）": "Maximum history limit reached (6 items)",
+  "已達到最大歷史記錄數量（3個）": "Maximum history limit reached (3 items)",
   "輸入要搜尋的文字...": "Enter text to search...",
   未知錯誤: "Unknown error",
   讀取檔案時發生錯誤: "Error reading file",

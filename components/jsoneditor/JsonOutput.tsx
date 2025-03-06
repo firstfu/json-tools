@@ -25,7 +25,7 @@ interface JsonOutputProps {
   totalMatches: number;
   handleSearch: () => void;
   navigateMatch: (direction: "next" | "prev") => void;
-  addToHistory: () => void;
+  addToHistory: () => boolean;
   handleEditorDidMount: EditorOnMount;
   t: (key: TranslationKey) => string;
 }
@@ -120,7 +120,16 @@ export function JsonOutput({
               </div>
               {output && (
                 <>
-                  <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (addToHistory()) {
+                        toast.success(t("已添加到歷史記錄"));
+                      }
+                    }}
+                    className="gap-2"
+                  >
                     <History className="h-3 w-3" />
                     {t("保存")}
                   </Button>
