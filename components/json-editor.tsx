@@ -40,13 +40,30 @@ interface SortableCardProps {
 function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName, t }: SortableCardProps) {
   const { theme } = useTheme();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
-  const [editorKey, setEditorKey] = useState(item.id);
+  const [showEditor, setShowEditor] = useState(false);
+  const mountTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // 當拖曳結束時重新生成 Editor
+  // 處理編輯器的掛載邏輯
   useEffect(() => {
-    if (!isDragging) {
-      setEditorKey(prev => `${prev}-${Date.now()}`);
+    // 清除之前的計時器
+    if (mountTimeoutRef.current) {
+      clearTimeout(mountTimeoutRef.current);
     }
+
+    if (isDragging) {
+      setShowEditor(false);
+    } else {
+      // 增加延遲時間，確保 DOM 完全更新
+      mountTimeoutRef.current = setTimeout(() => {
+        setShowEditor(true);
+      }, 300);
+    }
+
+    return () => {
+      if (mountTimeoutRef.current) {
+        clearTimeout(mountTimeoutRef.current);
+      }
+    };
   }, [isDragging]);
 
   const style = {
@@ -129,9 +146,9 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
       {/* 內容區域 - 可拖曳 */}
       <div ref={setNodeRef} className="cursor-move">
         <div className="h-[300px] overflow-y-auto p-3">
-          {!isDragging && (
+          {showEditor && !isDragging ? (
             <MonacoEditor
-              key={editorKey}
+              key={`${item.id}-${Date.now()}`}
               height="100%"
               defaultLanguage="json"
               value={item.content}
@@ -143,9 +160,12 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
                 lineNumbers: "off",
                 renderLineHighlight: "none",
                 scrollBeyondLastLine: false,
+                automaticLayout: true,
               }}
               loading={<div className="h-full flex items-center justify-center text-muted-foreground">載入中...</div>}
             />
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground">{isDragging ? "拖曳中..." : "載入中..."}</div>
           )}
         </div>
         <div className="bg-muted/50 p-2 text-xs text-muted-foreground border-t border-border">保存時間：{item.timestamp.toLocaleString()}</div>
