@@ -1,0 +1,22 @@
+---
+description: nextj規則
+globs: 
+alwaysApply: false
+---
+
+# Your rule content
+
+- 使用typescript
+- 使用react v^19.0.0
+- 使用next.js v^15.2.0
+- 使用 shadcn/ui 作為主要的 UI 元件庫，提供一致且美觀的使用者介面
+- 使用 tailwindcss 作為樣式管理工具，提供一致且美觀的樣式
+- 優先使用 shadcn/ui 封裝好的元件，若 shadcn/ui 沒有提供所需元件，則使用 tailwindcss 自行開發與封裝
+- 自行開發的元件應遵循 shadcn/ui 的設計風格與命名規範，確保整體介面的一致性
+- 所有自定義元件應放置在 components 目錄下，並依功能分類管理
+- 所有自定義元件應該要能夠重複使用，並且能夠適應不同的使用情境
+- 系統配色應同時支援明亮主題(light mode)與暗黑主題(dark mode)，確保在不同主題下都能提供良好的視覺體驗
+- 使用 next-themes 套件管理主題切換功能，讓使用者可以根據個人偏好選擇主題
+- 所有元件的顏色設定應使用 Tailwind CSS 的主題變數（如 bg-background、text-primary 等），而非硬編碼的顏色值
+- 自定義顏色應在 tailwind.config.js 中定義，並遵循 shadcn/ui 的命名規範
+- 確保所有元件在明暗主題切換時保持適當的對比度，符合 WCAG 2.1 AA 級無障礙標準
