@@ -41,6 +41,37 @@ export const en = {
   未知錯誤: "Unknown error",
   讀取檔案時發生錯誤: "Error reading file",
 
+  // Additional Editor Related
+  "輸入名稱...": "Enter name...",
+  "JSON 內容": "JSON Content",
+  保存時間: "Save time",
+  "請輸入 JSON 文本": "Please enter JSON text",
+  "轉換 CSV 時發生錯誤": "Error converting to CSV",
+  搜尋: "Search",
+  保存: "Save",
+  區分大小寫: "Match case",
+  全字匹配: "Match whole word",
+  下載格式化檔案: "Download formatted file",
+  下載壓縮檔案: "Download minified file",
+  "下載為 CSV": "Download as CSV",
+  "CSV 下載成功": "CSV download successful",
+
+  // JSON Example
+  json_example: `{
+  "name": "John",
+  "age": 25,
+  "isStudent": true,
+  "hobbies": ["Reading", "Swimming", "Traveling"],
+  "address": {
+    "city": "New York",
+    "zipCode": "10001"
+  },
+  "contact": {
+    "email": "example@mail.com",
+    "phone": "123-456-7890"
+  }
+}`,
+
   // Call to Action
   "立即體驗最強大的 JSON 處理工具": "Experience the Most Powerful JSON Processing Tool",
   "無需註冊，免費使用所有功能": "Use all features for free, no registration required",

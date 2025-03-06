@@ -16,6 +16,8 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } 
 import { CSS } from "@dnd-kit/utilities";
 import type { OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
+import { useParams } from "next/navigation";
+import { useTranslations, type TranslationKey } from "@/app/i18n/utils";
 
 interface HistoryItem {
   id: string;
@@ -32,9 +34,10 @@ interface SortableCardProps {
   onNameChange: (id: string, newName: string) => void;
   editingName: string | null;
   setEditingName: (id: string | null) => void;
+  t: (key: TranslationKey) => string;
 }
 
-function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName }: SortableCardProps) {
+function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName, t }: SortableCardProps) {
   const { theme } = useTheme();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const [editorKey, setEditorKey] = useState(item.id);
@@ -81,7 +84,7 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
                 className="h-6 text-sm w-full"
                 defaultValue={item.name}
                 autoFocus
-                placeholder="輸入名稱..."
+                placeholder={t("輸入名稱...")}
                 onBlur={e => {
                   const value = e.target.value.trim();
                   if (value) {
@@ -103,7 +106,12 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
             ) : (
               <div className="flex items-center gap-2 flex-1">
                 <h3 className="text-sm font-medium flex-1">{item.name}</h3>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingName(item.id)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => setEditingName(item.id)}
+                >
                   <FileJson className="h-3 w-3" />
                 </Button>
               </div>
@@ -250,6 +258,8 @@ export function JsonEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<MonacoEditorType | null>(null);
   const { theme } = useTheme();
+  const params = useParams();
+  const { t } = useTranslations(params.lang as "en" | "zh-TW");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -409,10 +419,10 @@ export function JsonEditor() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("已複製到剪貼板");
+      toast.success(t("已複製到剪貼板"));
     } catch (error) {
-      console.log("🚀 ~ copyToClipboard ~ error:", error);
-      toast.error("複製失敗");
+      console.error("Copy failed:", error);
+      toast.error(t("複製失敗"));
     }
   };
 
@@ -426,14 +436,14 @@ export function JsonEditor() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("下載成功");
+    toast.success(t("下載成功"));
   };
 
   const addToHistory = useCallback(() => {
     if (!output) return;
 
     if (history.length >= 6) {
-      toast.error("已達到最大歷史記錄數量（6個）");
+      toast.error(t("已達到最大歷史記錄數量（6個）"));
       return;
     }
 
@@ -445,8 +455,8 @@ export function JsonEditor() {
     };
 
     setHistory(prev => [newItem, ...prev]);
-    toast.success("已添加到歷史記錄");
-  }, [output, history]);
+    toast.success(t("已添加到歷史記錄"));
+  }, [output, history, t]);
 
   const updateHistoryName = useCallback((id: string, newName: string) => {
     setHistory(prev => prev.map(item => (item.id === id ? { ...item, name: newName } : item)));
@@ -549,6 +559,7 @@ export function JsonEditor() {
                     onNameChange={updateHistoryName}
                     editingName={editingName}
                     setEditingName={setEditingName}
+                    t={t}
                   />
                 ))}
               </SortableContext>
@@ -586,7 +597,7 @@ export function JsonEditor() {
           <div className="flex flex-col md:w-1/2">
             <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
               <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
-                <h2 className="text-sm font-medium">輸入 JSON</h2>
+                <h2 className="text-sm font-medium">{t("輸入 JSON")}</h2>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
@@ -607,20 +618,7 @@ export function JsonEditor() {
               </div>
               <div className="flex-1 flex flex-col">
                 <Textarea
-                  placeholder={`{
-  "name": "小明",
-  "age": 25,
-  "isStudent": true,
-  "hobbies": ["閱讀", "游泳", "旅行"],
-  "address": {
-    "city": "台北",
-    "zipCode": "10617"
-  },
-  "contact": {
-    "email": "example@mail.com",
-    "phone": "0912-345-678"
-  }
-}`}
+                  placeholder={t("json_example")}
                   className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto flex-grow"
                   value={input}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
@@ -630,11 +628,11 @@ export function JsonEditor() {
               <div className="bg-muted/50 p-3 border-t border-border flex items-center gap-2">
                 <Button onClick={formatJson} className="gap-2" variant="secondary">
                   <FileJson className="h-4 w-4" />
-                  格式化
+                  {t("格式化")}
                 </Button>
                 <Button variant="outline" onClick={minifyJson} className="gap-2">
                   <Minimize2 className="h-4 w-4" />
-                  壓縮
+                  {t("壓縮")}
                 </Button>
                 <Button
                   variant="outline"
@@ -646,7 +644,7 @@ export function JsonEditor() {
                   className="gap-2"
                 >
                   <X className="h-4 w-4" />
-                  清除
+                  {t("清除")}
                 </Button>
               </div>
             </Card>
@@ -663,7 +661,7 @@ export function JsonEditor() {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <Input
-                      placeholder="輸入要搜尋的文字..."
+                      placeholder={t("輸入要搜尋的文字...")}
                       value={searchText}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                       onKeyDown={e => {
@@ -697,14 +695,14 @@ export function JsonEditor() {
                       )}
                       <Button variant="secondary" size="sm" onClick={handleSearch} className="gap-2">
                         <Search className="h-3 w-3" />
-                        搜尋
+                        {t("搜尋")}
                       </Button>
                     </div>
                     {output && (
                       <>
                         <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
                           <History className="h-3 w-3" />
-                          保存
+                          {t("保存")}
                         </Button>
                       </>
                     )}
@@ -712,11 +710,16 @@ export function JsonEditor() {
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
                       <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} className="h-4 w-4 rounded border-muted" />
-                      區分大小寫
+                      {t("區分大小寫")}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <input type="checkbox" checked={matchWholeWord} onChange={e => setMatchWholeWord(e.target.checked)} className="h-4 w-4 rounded border-muted" />
-                      全字匹配
+                      <input
+                        type="checkbox"
+                        checked={matchWholeWord}
+                        onChange={e => setMatchWholeWord(e.target.checked)}
+                        className="h-4 w-4 rounded border-muted"
+                      />
+                      {t("全字匹配")}
                     </label>
                   </div>
                 </div>
@@ -742,11 +745,11 @@ export function JsonEditor() {
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => downloadJson(output, "formatted")}>
                             <Download className="h-4 w-4 mr-2" />
-                            下載格式化檔案
+                            {t("下載格式化檔案")}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => downloadJson(JSON.stringify(JSON.parse(output)), "minified")}>
                             <Download className="h-4 w-4 mr-2" />
-                            下載壓縮檔案
+                            {t("下載壓縮檔案")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
@@ -762,14 +765,15 @@ export function JsonEditor() {
                                 a.click();
                                 document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
-                                toast.success("CSV 下載成功");
+                                toast.success(t("CSV 下載成功"));
                               } catch (error) {
-                                toast.error(error instanceof Error ? error.message : "轉換 CSV 時發生錯誤");
+                                console.error("Error converting to CSV:", error);
+                                toast.error(error instanceof Error ? error.message : t("轉換 CSV 時發生錯誤"));
                               }
                             }}
                           >
                             <FileText className="h-4 w-4 mr-2" />
-                            下載為 CSV
+                            {t("下載為 CSV")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -807,7 +811,9 @@ export function JsonEditor() {
                       }}
                     />
                   ) : (
-                    <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 font-mono text-muted-foreground text-sm flex-grow">格式化結果將顯示在這裡...</div>
+                    <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 font-mono text-muted-foreground text-sm flex-grow">
+                      {t("格式化結果將顯示在這裡...")}
+                    </div>
                   )}
                 </div>
               </div>
