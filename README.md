@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JSON Editor
 
-## Getting Started
+一個功能強大的網頁版 JSON 編輯器，提供直覺的使用介面和豐富的功能，幫助開發者更有效率地處理 JSON 數據。
 
-First, run the development server:
+## 功能特點
+
+### 核心編輯功能
+
+- 🔄 JSON 格式化與壓縮
+- ✨ 自動語法錯誤檢測
+- 🎨 支援深色/淺色主題
+- 📝 Monaco Editor 整合，提供專業的程式碼編輯體驗
+
+### 進階功能
+
+- 🔍 強大的搜尋功能
+  - 區分大小寫選項
+  - 全字匹配選項
+  - 搜尋結果導航
+  - 即時高亮顯示
+- 📋 一鍵複製到剪貼板
+- 💾 檔案導入/導出
+  - 支援 JSON 檔案上傳
+  - 格式化/壓縮檔案下載
+  - 轉換並下載為 CSV 格式
+
+### 歷史記錄
+
+- 📚 最多保存 6 筆編輯歷史
+- 🔄 支援拖拽排序
+- ✏️ 自定義歷史記錄名稱
+- 👀 快速預覽歷史內容
+
+## 技術棧
+
+- **前端框架**: Next.js
+- **UI 組件**:
+  - shadcn/ui
+  - Lucide Icons
+- **編輯器**: Monaco Editor
+- **拖拽功能**: @dnd-kit
+- **本地化**: i18n 支援
+- **狀態管理**: React Hooks
+- **樣式**: Tailwind CSS
+
+## 安裝
 
 ```bash
+# 安裝依賴
+npm install
+
+# 開發環境運行
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 生產環境建置
+npm run build
+
+# 生產環境運行
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 使用指南
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 基本操作
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. 在左側輸入區域貼入或輸入 JSON 文本
+2. 點擊「格式化」按鈕進行格式化
+3. 格式化後的結果將顯示在右側視窗
 
-## Learn More
+### 搜尋功能
 
-To learn more about Next.js, take a look at the following resources:
+1. 在右側上方的搜尋框輸入要搜尋的文字
+2. 使用上下箭頭按鈕或 Enter 鍵導航搜尋結果
+3. 可選擇是否區分大小寫或全字匹配
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 歷史記錄
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. 點擊「保存」按鈕將當前內容加入歷史記錄
+2. 拖拽歷史記錄卡片可重新排序
+3. 點擊卡片上的編輯圖示可修改名稱
+4. 使用載入按鈕可將歷史記錄內容載入編輯器
 
-## Deploy on Vercel
+## 國際化支援
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+目前支援以下語言：
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 繁體中文 (zh-TW)
+- 英文 (en)
+
+## 瀏覽器支援
+
+- Chrome (推薦)
+- Firefox
+- Safari
+- Edge
+
+## 貢獻指南
+
+歡迎提交 Pull Request 或建立 Issue。
+
+## 授權
+
+本專案採用 MIT 授權。
+
+## 作者
+
+[作者名稱]
+
+## 更新日誌
+
+### v1.0.0
+
+- 初始版本發布
+- 實現基本的 JSON 編輯功能
+- 加入歷史記錄功能
+- 支援多語言
