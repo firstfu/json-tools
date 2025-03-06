@@ -285,9 +285,9 @@ export function JsonEditor() {
 
   // 只從 localStorage 加載歷史記錄
   useEffect(() => {
-    const savedHistory = localStorage.getItem("jsonEditorHistory");
-    if (savedHistory) {
-      try {
+    try {
+      const savedHistory = localStorage.getItem("jsonEditorHistory");
+      if (savedHistory) {
         const parsedHistory = JSON.parse(savedHistory);
         // 轉換時間戳為 Date 對象
         const historyWithDates = parsedHistory.map((item: Omit<HistoryItem, "timestamp"> & { timestamp: string }) => ({
@@ -295,15 +295,22 @@ export function JsonEditor() {
           timestamp: new Date(item.timestamp),
         }));
         setHistory(historyWithDates);
-      } catch (error) {
-        console.error("Error parsing history:", error);
       }
+    } catch (error) {
+      console.error("Error parsing history:", error);
+      // 如果解析失敗，清除可能損壞的數據
+      localStorage.removeItem("jsonEditorHistory");
     }
   }, []);
 
   // 只保存歷史記錄到 localStorage
   useEffect(() => {
-    localStorage.setItem("jsonEditorHistory", JSON.stringify(history));
+    try {
+      localStorage.setItem("jsonEditorHistory", JSON.stringify(history));
+    } catch (error) {
+      console.error("Error saving history to localStorage:", error);
+      toast.error("保存歷史記錄失敗");
+    }
   }, [history]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -442,22 +449,30 @@ export function JsonEditor() {
   };
 
   const addToHistory = useCallback(() => {
-    if (!output) return;
+    if (!output) {
+      toast.error("沒有可保存的內容");
+      return;
+    }
 
     if (history.length >= 6) {
       toast.error(t("已達到最大歷史記錄數量（6個）"));
       return;
     }
 
-    const newItem: HistoryItem = {
-      id: Date.now().toString(),
-      content: output,
-      timestamp: new Date(),
-      name: `JSON ${history.length + 1}`,
-    };
+    try {
+      const newItem: HistoryItem = {
+        id: Date.now().toString(),
+        content: output,
+        timestamp: new Date(),
+        name: `JSON ${history.length + 1}`,
+      };
 
-    setHistory(prev => [newItem, ...prev]);
-    toast.success(t("已添加到歷史記錄"));
+      setHistory(prev => [newItem, ...prev]);
+      toast.success(t("已添加到歷史記錄"));
+    } catch (error) {
+      console.error("Error adding to history:", error);
+      toast.error("添加到歷史記錄失敗");
+    }
   }, [output, history, t]);
 
   const updateHistoryName = useCallback((id: string, newName: string) => {
