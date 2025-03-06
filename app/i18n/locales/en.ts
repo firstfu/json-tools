@@ -30,6 +30,7 @@ export const en = {
   格式化: "Format",
   壓縮: "Minify",
   清除: "Clear",
+  複製: "Copy",
   "格式化結果將顯示在這裡...": "Formatted result will be shown here...",
   "載入中...": "Loading...",
   已複製到剪貼板: "Copied to clipboard",

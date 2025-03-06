@@ -616,6 +616,9 @@ export function JsonEditor() {
               <div className="bg-muted/50 p-3 border-b border-border flex items-center justify-between">
                 <h2 className="text-sm font-medium">{t("輸入 JSON")}</h2>
                 <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => copyToClipboard(input)} className="h-8 w-8">
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -714,15 +717,19 @@ export function JsonEditor() {
                         <Search className="h-3 w-3" />
                         {t("搜尋")}
                       </Button>
+                      {output && (
+                        <>
+                          <Button variant="outline" size="sm" onClick={() => copyToClipboard(output)} className="gap-2">
+                            <Copy className="h-3 w-3" />
+                            {t("複製")}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
+                            <History className="h-3 w-3" />
+                            {t("保存")}
+                          </Button>
+                        </>
+                      )}
                     </div>
-                    {output && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={addToHistory} className="gap-2">
-                          <History className="h-3 w-3" />
-                          {t("保存")}
-                        </Button>
-                      </>
-                    )}
                   </div>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
