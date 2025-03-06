@@ -4,6 +4,8 @@ import "../globals.css";
 import { i18n } from "../i18n/settings";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { translate } from "../i18n/utils";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,12 +28,15 @@ export default async function RootLayout({ children, params }: { children: React
   const { lang } = resolvedParams;
 
   return (
-    <html lang={lang}>
+    <html lang={lang} suppressHydrationWarning>
       <body className={inter.className}>
-        <header className="p-4 border-b">
-          <LanguageSwitcher />
-        </header>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange storageKey="json-tools-theme">
+          <header className="p-4 border-b flex justify-between items-center">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </header>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
