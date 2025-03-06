@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Rocket, Zap, Sparkles } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "@/app/i18n/utils";
@@ -23,10 +22,6 @@ export function Header() {
 
   return (
     <div className="relative overflow-hidden bg-background pt-16 pb-12">
-      <div className="absolute top-4 right-4 z-20">
-        <ThemeToggle />
-      </div>
-
       <div className="relative z-10">
         <div className="text-center space-y-6 max-w-5xl mx-auto pt-8">
           <h1 className="text-5xl font-bold tracking-tight sm:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
