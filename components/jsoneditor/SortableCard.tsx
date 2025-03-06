@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -9,19 +9,44 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FileJson, Upload, X, Maximize2 } from "lucide-react";
+import type { editor } from "monaco-editor";
 import type { SortableCardProps } from "./types";
 
 export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName, t }: SortableCardProps) {
   const { theme } = useTheme();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
-  const [editorKey, setEditorKey] = useState(item.id);
+  const [isEditorMounted, setIsEditorMounted] = useState(true);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  // 當拖曳結束時重新生成 Editor
+  const handleEditorWillMount = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.dispose();
+      editorRef.current = null;
+    }
+  }, []);
+
+  const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
+    editorRef.current = editor;
+  }, []);
+
   useEffect(() => {
-    if (!isDragging) {
-      setEditorKey(prev => `${prev}-${Date.now()}`);
+    if (isDragging) {
+      setIsEditorMounted(false);
+    } else {
+      const timer = window.setTimeout(() => {
+        setIsEditorMounted(true);
+      }, 300);
+      return () => window.clearTimeout(timer);
     }
   }, [isDragging]);
+
+  useEffect(() => {
+    return () => {
+      if (editorRef.current) {
+        editorRef.current.dispose();
+      }
+    };
+  }, []);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -103,13 +128,15 @@ export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, e
       {/* 內容區域 - 可拖曳 */}
       <div ref={setNodeRef} className="cursor-move">
         <div className="h-[300px] overflow-y-auto p-3">
-          {!isDragging && (
+          {isEditorMounted ? (
             <MonacoEditor
-              key={editorKey}
+              key={`${item.id}-${Date.now()}`}
               height="100%"
               defaultLanguage="json"
               value={item.content}
               theme={theme === "dark" ? "vs-dark" : "light"}
+              beforeMount={handleEditorWillMount}
+              onMount={handleEditorDidMount}
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
@@ -117,9 +144,12 @@ export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, e
                 lineNumbers: "off",
                 renderLineHighlight: "none",
                 scrollBeyondLastLine: false,
+                automaticLayout: true,
               }}
               loading={<div className="h-full flex items-center justify-center text-muted-foreground">載入中...</div>}
             />
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground">正在拖曳...</div>
           )}
         </div>
         <div className="bg-muted/50 p-2 text-xs text-muted-foreground border-t border-border">保存時間：{item.timestamp.toLocaleString()}</div>
