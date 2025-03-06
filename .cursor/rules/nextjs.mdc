@@ -6,6 +6,7 @@ alwaysApply: false
 
 # Your rule content
 
+- 每一個檔案的最上方都要加上註釋
 - 使用typescript
 - 使用react v^19.0.0
 - 使用next.js v^15.2.0
