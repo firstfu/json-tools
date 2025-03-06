@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { i18n } from "../i18n/settings";
+import { Button } from "@/components/ui/button";
 
 export default function LanguageSwitcher() {
   const router = useRouter();
@@ -16,11 +17,14 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="flex gap-2">
-      {i18n.locales.map(locale => (
-        <button key={locale} onClick={() => switchLanguage(locale)} className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">
-          {locale === "en" ? "English" : "繁體中文"}
-        </button>
-      ))}
+      {i18n.locales.map(locale => {
+        const isCurrentLocale = pathname.startsWith(`/${locale}`);
+        return (
+          <Button key={locale} onClick={() => switchLanguage(locale)} variant={isCurrentLocale ? "default" : "outline"} size="sm" className="min-w-[90px]">
+            {locale === "en" ? "English" : "繁體中文"}
+          </Button>
+        );
+      })}
     </div>
   );
 }

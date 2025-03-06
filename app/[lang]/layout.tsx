@@ -30,7 +30,7 @@ export default async function RootLayout({ children, params }: { children: React
   return (
     <html lang={lang} suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange storageKey="json-tools-theme">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange storageKey="json-tools-theme">
           <header className="p-4 border-b flex justify-between items-center">
             <LanguageSwitcher />
             <ThemeToggle />
