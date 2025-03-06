@@ -29,13 +29,18 @@ export default async function RootLayout({ children, params }: { children: React
 
   return (
     <html lang={lang} suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange storageKey="json-tools-theme">
-          <header className="p-4 border-b flex justify-between items-center">
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </header>
-          {children}
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange storageKey="json-tools-theme">
+          <div className="min-h-screen bg-background">
+            <header className="p-4 border-b flex justify-between items-center">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </header>
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>
