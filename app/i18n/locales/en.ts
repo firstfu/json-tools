@@ -16,6 +16,14 @@ export const en = {
   資料隱私: "Data Privacy",
   "所有處理在本地完成，確保資料安全": "All processing is done locally to ensure data security",
 
+  // Additional Features for Footer
+  開發友好: "Developer Friendly",
+  支援程式碼高亮與自動完成: "Supports code highlighting and auto-completion",
+  離線使用: "Offline Use",
+  "無需網路連接，隨時隨地使用": "No internet connection required, use anytime anywhere",
+  高效能: "High Performance",
+  "快速處理大型複雜的 JSON 資料": "Quickly process large and complex JSON data",
+
   // Editor Related
   輸入: "Input",
   "輸入 JSON": "Input JSON",
