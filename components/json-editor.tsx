@@ -106,12 +106,7 @@ function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingN
             ) : (
               <div className="flex items-center gap-2 flex-1">
                 <h3 className="text-sm font-medium flex-1">{item.name}</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => setEditingName(item.id)}
-                >
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingName(item.id)}>
                   <FileJson className="h-3 w-3" />
                 </Button>
               </div>
@@ -268,14 +263,9 @@ export function JsonEditor() {
     })
   );
 
-  // 從 localStorage 加載數據
+  // 只從 localStorage 加載歷史記錄
   useEffect(() => {
-    const savedInput = localStorage.getItem("jsonEditorInput");
-    const savedOutput = localStorage.getItem("jsonEditorOutput");
     const savedHistory = localStorage.getItem("jsonEditorHistory");
-
-    if (savedInput) setInput(savedInput);
-    if (savedOutput) setOutput(savedOutput);
     if (savedHistory) {
       try {
         const parsedHistory = JSON.parse(savedHistory);
@@ -291,15 +281,7 @@ export function JsonEditor() {
     }
   }, []);
 
-  // 保存數據到 localStorage
-  useEffect(() => {
-    localStorage.setItem("jsonEditorInput", input);
-  }, [input]);
-
-  useEffect(() => {
-    localStorage.setItem("jsonEditorOutput", output);
-  }, [output]);
-
+  // 只保存歷史記錄到 localStorage
   useEffect(() => {
     localStorage.setItem("jsonEditorHistory", JSON.stringify(history));
   }, [history]);
@@ -713,12 +695,7 @@ export function JsonEditor() {
                       {t("區分大小寫")}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        checked={matchWholeWord}
-                        onChange={e => setMatchWholeWord(e.target.checked)}
-                        className="h-4 w-4 rounded border-muted"
-                      />
+                      <input type="checkbox" checked={matchWholeWord} onChange={e => setMatchWholeWord(e.target.checked)} className="h-4 w-4 rounded border-muted" />
                       {t("全字匹配")}
                     </label>
                   </div>
