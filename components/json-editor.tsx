@@ -320,7 +320,7 @@ export function JsonEditor() {
   const formatJson = useCallback(() => {
     try {
       if (!input.trim()) {
-        setError("請輸入 JSON 文本");
+        setError(t("請輸入 JSON 文本"));
         return;
       }
       const parsed = JSON.parse(input);
@@ -370,12 +370,12 @@ export function JsonEditor() {
         setError("未知錯誤");
       }
     }
-  }, [input]);
+  }, [input, t]);
 
   const minifyJson = useCallback(() => {
     try {
       if (!input.trim()) {
-        setError("請輸入 JSON 文本");
+        setError(t("請輸入 JSON 文本"));
         return;
       }
       const parsed = JSON.parse(input);
@@ -388,7 +388,7 @@ export function JsonEditor() {
         setError("未知錯誤");
       }
     }
-  }, [input]);
+  }, [input, t]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
