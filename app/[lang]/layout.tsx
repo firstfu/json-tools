@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "sonner";
 import { PostHogProvider } from "../providers";
+import { GoogleAnalytics } from "../ga-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +34,8 @@ export default async function RootLayout({ children, params }: { children: React
     <html lang={lang} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="google-site-verification" content="您的 Google Search Console 驗證碼" />
+        <GoogleAnalytics />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <PostHogProvider>
