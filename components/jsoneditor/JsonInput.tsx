@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { FileJson, Minimize2, Upload, X } from "lucide-react";
 import type { TranslationKey } from "@/app/i18n/utils";
+import { Loader2 } from "lucide-react";
 
 interface JsonInputProps {
   input: string;
@@ -20,6 +21,7 @@ interface JsonInputProps {
 
 export function JsonInput({ input, setInput, setOutput, setError, error, formatJson, minifyJson, t }: JsonInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isPasting, setIsPasting] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,6 +49,33 @@ export function JsonInput({ input, setInput, setOutput, setError, error, formatJ
     reader.readAsText(file);
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    // 獲取剪貼板內容
+    const pastedText = e.clipboardData.getData("text");
+    if (!pastedText.trim()) return;
+
+    // 設置貼上中狀態
+    setIsPasting(true);
+
+    // 阻止默認貼上行為，我們將手動處理
+    e.preventDefault();
+
+    // 使用 setTimeout 確保在下一個事件循環中處理，這樣 UI 能夠更新
+    setTimeout(() => {
+      // 手動設置輸入內容
+      setInput(pastedText);
+
+      // 清除之前的錯誤和輸出
+      setError(null);
+      setOutput("");
+
+      // 延遲關閉 loading 提示，確保用戶能看到
+      setTimeout(() => {
+        setIsPasting(false);
+      }, 800);
+    }, 200);
+  };
+
   return (
     <div className="flex flex-col md:w-1/2">
       <Card className="overflow-hidden border-2 border-muted flex flex-col flex-grow min-h-[calc(600px+6rem)]">
@@ -70,14 +99,25 @@ export function JsonInput({ input, setInput, setOutput, setError, error, formatJ
             </Button>
           </div>
         </div>
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col relative">
           <Textarea
             placeholder={t("json_example")}
             className="h-[600px] w-full font-mono resize-none border-0 focus-visible:ring-0 overflow-y-auto flex-grow"
             value={input}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+            onPaste={handlePaste}
           />
           <input type="file" ref={fileInputRef} className="hidden" accept="application/json,.json" onChange={handleFileUpload} />
+
+          {/* 貼上時的 loading 提示 */}
+          {isPasting && (
+            <div className="absolute inset-0 bg-background/90 flex items-center justify-center z-10 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3 bg-card p-6 rounded-lg shadow-lg border border-border">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-base font-medium">{t("載入中...")}</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="bg-muted/50 p-3 border-t border-border flex items-center gap-2">
           <Button onClick={formatJson} className="gap-2" variant="secondary">
