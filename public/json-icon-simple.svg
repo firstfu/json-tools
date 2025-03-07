@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="64" fill="#121826"/>
+
+  <!-- 紙張主體 -->
+  <rect x="64" y="64" width="384" height="384" fill="#1E293B"/>
+
+  <!-- 紙張折角 -->
+  <path d="M448 64L384 0H64C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V128L448 64z" fill="#0F172A" fill-opacity="0.7"/>
+  <path d="M448 64L384 64V0L448 64Z" fill="#334155"/>
+
+  <!-- 左大括號 - 增加寬度並使用純色 -->
+  <path d="M192 128C174.3 128 160 142.3 160 160V224C160 241.7 145.7 256 128 256C145.7 256 160 270.3 160 288V352C160 369.7 174.3 384 192 384"
+        stroke="#38BDF8" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 右大括號 - 增加寬度並使用純色 -->
+  <path d="M320 128C337.7 128 352 142.3 352 160V224C352 241.7 366.3 256 384 256C366.3 256 352 270.3 352 288V352C352 369.7 337.7 384 320 384"
+        stroke="#38BDF8" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 中間點和線 - 增加尺寸並使用純色 -->
+  <circle cx="256" cy="192" r="20" fill="#38BDF8"/>
+  <rect x="236" y="240" width="40" height="64" rx="20" fill="#38BDF8"/>
+</svg>
