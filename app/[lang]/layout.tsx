@@ -38,7 +38,7 @@ export default async function RootLayout({ children, params }: { children: React
         <GoogleAnalytics />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <PostHogProvider>
+        <PostHogProvider key="posthog-provider">
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange storageKey="json-tools-theme">
             <div className="min-h-screen bg-background">
               <header className="p-4 border-b flex justify-between items-center">

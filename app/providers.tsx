@@ -1,33 +1,60 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 
-// 在元件外部先初始化 PostHog 客戶端
-if (typeof window !== "undefined") {
-  console.log("======================================");
-  console.log("process.env.NEXT_PUBLIC_POSTHOG_KEY:", process.env.NEXT_PUBLIC_POSTHOG_KEY);
-  console.log("process.env.NEXT_PUBLIC_POSTHOG_HOST:", process.env.NEXT_PUBLIC_POSTHOG_HOST);
-  console.log("======================================");
+// 創建一個初始化的 PostHog 客戶端
+const createPostHogClient = () => {
+  // 確保只在客戶端執行
+  if (typeof window !== "undefined") {
+    try {
+      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
+        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
+        person_profiles: "identified_only", // 僅為已識別的用戶創建個人資料
+        capture_pageview: false, // 禁用自動頁面查看捕獲，因為我們手動捕獲
+        loaded: posthog => {
+          if (process.env.NODE_ENV === "development") {
+            // 在開發環境中，可以選擇禁用 PostHog
+            // posthog.opt_out_capturing();
+          }
+        },
+      });
+      return posthog;
+    } catch (error) {
+      console.error("PostHog 初始化失敗:", error);
+      return null;
+    }
+  }
+  return null;
+};
 
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    person_profiles: "identified_only", // 僅為已識別的用戶創建個人資料
-    capture_pageview: false, // 禁用自動頁面查看捕獲，因為我們手動捕獲
-  });
-}
+// 使用客戶端組件包裝器確保只在客戶端初始化 PostHog
+function ClientOnlyPostHog({ children }: { children: React.ReactNode }) {
+  const [client, setClient] = useState<typeof posthog | null>(null);
 
-export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    // 在客戶端組件掛載後初始化 PostHog
+    setClient(createPostHogClient());
+  }, []);
+
+  if (!client) {
+    return <>{children}</>;
+  }
+
   return (
-    <PHProvider client={posthog}>
+    <PHProvider client={client}>
       <SuspendedPostHogPageView />
       {children}
     </PHProvider>
   );
+}
+
+export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  return <ClientOnlyPostHog>{children}</ClientOnlyPostHog>;
 }
 
 function PostHogPageView() {
@@ -42,9 +69,6 @@ function PostHogPageView() {
       if (searchParams.toString()) {
         url = url + "?" + searchParams.toString();
       }
-
-      console.log("url", url);
-      console.log("searchParams", searchParams);
 
       posthog.capture("$pageview", { $current_url: url });
     }
