@@ -8,11 +8,12 @@ import { Editor as MonacoEditor } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { FileJson, Upload, X, Maximize2 } from "lucide-react";
+import { FileJson, Upload, X, Maximize2, GitCompare } from "lucide-react";
 import type { editor } from "monaco-editor";
 import type { SortableCardProps } from "./types";
+import { CompareMode } from "./types";
 
-export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName, t }: SortableCardProps) {
+export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, editingName, setEditingName, compareMode, selectedItems, onCompareSelect, t }: SortableCardProps) {
   const { theme } = useTheme();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const [isEditorMounted, setIsEditorMounted] = useState(true);
@@ -54,8 +55,20 @@ export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, e
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // 檢查當前卡片是否被選中用於比對
+  const isSelectedForCompare = compareMode !== CompareMode.NONE && (selectedItems.first?.id === item.id || selectedItems.second?.id === item.id);
+
+  // 確定是第一個還是第二個選擇
+  const isFirstSelection = selectedItems.first?.id === item.id;
+  const isSecondSelection = selectedItems.second?.id === item.id;
+
   return (
-    <Card style={style} className="relative overflow-hidden border-2 border-gray-300 dark:border-gray-600 shadow-md hover:shadow-lg transition-all group">
+    <Card
+      style={style}
+      className={`relative overflow-hidden border-2 ${
+        isSelectedForCompare ? (isFirstSelection ? "border-blue-500 dark:border-blue-400" : "border-green-500 dark:border-green-400") : "border-gray-300 dark:border-gray-600"
+      } shadow-md hover:shadow-lg transition-all group`}
+    >
       {/* 標題區域 - 不可拖曳 */}
       <div className="p-2 border-b-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center justify-between gap-2">
@@ -104,7 +117,18 @@ export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, e
               />
             ) : (
               <div className="flex items-center gap-2 flex-1">
-                <h3 className="text-sm font-medium flex-1">{item.name}</h3>
+                <h3 className="text-sm font-medium flex-1">
+                  {item.name}
+                  {isSelectedForCompare && (
+                    <span
+                      className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
+                        isFirstSelection ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      }`}
+                    >
+                      {isFirstSelection ? "1" : "2"}
+                    </span>
+                  )}
+                </h3>
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditingName(item.id)}>
                   <FileJson className="h-3 w-3" />
                 </Button>
@@ -112,6 +136,11 @@ export function SortableCard({ item, onRemove, onLoad, onSelect, onNameChange, e
             )}
           </div>
           <div className="flex gap-2">
+            {compareMode === CompareMode.SELECTING && (
+              <Button variant={isSelectedForCompare ? "default" : "outline"} size="icon" onClick={() => onCompareSelect(item)} className="h-6 w-6">
+                <GitCompare className="h-3 w-3" />
+              </Button>
+            )}
             <Button variant="outline" size="icon" onClick={() => onSelect(item)} className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
               <Maximize2 className="h-3 w-3" />
             </Button>

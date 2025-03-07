@@ -9,6 +9,17 @@ export interface HistoryItem {
   name: string;
 }
 
+export enum CompareMode {
+  NONE = "none",
+  SELECTING = "selecting",
+  COMPARING = "comparing",
+}
+
+export interface SelectedItems {
+  first: HistoryItem | null;
+  second: HistoryItem | null;
+}
+
 export interface MonacoRange {
   startLineNumber: number;
   startColumn: number;
@@ -49,6 +60,9 @@ export interface SortableCardProps {
   onNameChange: (id: string, newName: string) => void;
   editingName: string | null;
   setEditingName: (id: string | null) => void;
+  compareMode: CompareMode;
+  selectedItems: SelectedItems;
+  onCompareSelect: (item: HistoryItem) => void;
   t: (key: TranslationKey) => string;
 }
 

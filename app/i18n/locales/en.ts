@@ -95,4 +95,21 @@ export const en = {
   使用條款: "Terms of Use",
   贊助我們: "Support Us",
   保留所有權利: "All rights reserved",
+
+  // 比對功能相關
+  "比對 JSON": "Compare JSON",
+  左側: "Left",
+  右側: "Right",
+  "左側 JSON": "Left JSON",
+  "右側 JSON": "Right JSON",
+  並排比對: "Side by Side",
+  關閉: "Close",
+  選擇比對: "Select for Compare",
+  取消比對: "Cancel Compare",
+  開始比對: "Start Compare",
+  "請選擇兩個 JSON 進行比對": "Please select two JSONs to compare",
+  已選擇: "Selected",
+  選擇第一個: "Select First",
+  選擇第二個: "Select Second",
+  "已儲存的 JSON": "Saved JSONs",
 } as const;

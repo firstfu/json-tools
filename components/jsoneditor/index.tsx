@@ -13,7 +13,11 @@ import { useTranslations } from "@/app/i18n/utils";
 import { SortableCard } from "./SortableCard";
 import { JsonInput } from "./JsonInput";
 import { JsonOutput } from "./JsonOutput";
-import type { HistoryItem, MonacoEditorType, EditorOnMount } from "./types";
+import { JsonCompare } from "./JsonCompare";
+import type { HistoryItem, MonacoEditorType, EditorOnMount, SelectedItems } from "./types";
+import { CompareMode } from "./types";
+import { Button } from "@/components/ui/button";
+import { GitCompare, X } from "lucide-react";
 
 export function JsonEditor() {
   const [input, setInput] = useState("");
@@ -27,6 +31,9 @@ export function JsonEditor() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState<CompareMode>(CompareMode.NONE);
+  const [selectedItems, setSelectedItems] = useState<SelectedItems>({ first: null, second: null });
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
   const editorRef = useRef<MonacoEditorType | null>(null);
   const params = useParams();
   const { t } = useTranslations(params.lang as "en" | "zh-TW");
@@ -61,6 +68,28 @@ export function JsonEditor() {
   useEffect(() => {
     localStorage.setItem("jsonEditorHistory", JSON.stringify(history));
   }, [history]);
+
+  // 當比對模式改變時，重置選擇
+  useEffect(() => {
+    if (compareMode === CompareMode.NONE) {
+      setSelectedItems({ first: null, second: null });
+    }
+  }, [compareMode]);
+
+  // 當選擇了兩個項目時，自動打開比對對話框
+  useEffect(() => {
+    if (selectedItems.first && selectedItems.second) {
+      setCompareDialogOpen(true);
+      setCompareMode(CompareMode.COMPARING);
+    }
+  }, [selectedItems.first, selectedItems.second]);
+
+  // 當比對對話框關閉時，重置比對模式
+  useEffect(() => {
+    if (!compareDialogOpen && compareMode === CompareMode.COMPARING) {
+      setCompareMode(CompareMode.NONE);
+    }
+  }, [compareDialogOpen, compareMode]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -251,29 +280,95 @@ export function JsonEditor() {
     editorRef.current = editor as unknown as MonacoEditorType;
   };
 
+  // 處理比對選擇
+  const handleCompareSelect = useCallback((item: HistoryItem) => {
+    setSelectedItems(prev => {
+      // 如果已經選擇了這個項目，取消選擇
+      if (prev.first?.id === item.id) {
+        return { ...prev, first: null };
+      }
+      if (prev.second?.id === item.id) {
+        return { ...prev, second: null };
+      }
+
+      // 如果還沒有選擇第一個項目，選擇為第一個
+      if (!prev.first) {
+        return { ...prev, first: item };
+      }
+
+      // 如果已經選擇了第一個項目，選擇為第二個
+      return { ...prev, second: item };
+    });
+  }, []);
+
+  // 切換比對模式
+  const toggleCompareMode = useCallback(() => {
+    setCompareMode(prev => (prev === CompareMode.NONE ? CompareMode.SELECTING : CompareMode.NONE));
+  }, []);
+
   return (
     <div id="json-editor-section" className="w-full">
       <div className="space-y-6">
         {history.length > 0 && (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <SortableContext items={history.map(item => item.id)}>
-                {history.map(item => (
-                  <SortableCard
-                    key={item.id}
-                    item={item}
-                    onRemove={removeFromHistory}
-                    onLoad={loadFromHistory}
-                    onSelect={setSelectedItem}
-                    onNameChange={updateHistoryName}
-                    editingName={editingName}
-                    setEditingName={setEditingName}
-                    t={t}
-                  />
-                ))}
-              </SortableContext>
+          <>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">{t("已儲存的 JSON")}</h2>
+              {history.length >= 2 && (
+                <Button variant={compareMode === CompareMode.SELECTING ? "default" : "outline"} size="sm" onClick={toggleCompareMode} className="flex items-center gap-1">
+                  {compareMode === CompareMode.SELECTING ? (
+                    <>
+                      <X className="h-4 w-4" />
+                      {t("取消比對")}
+                    </>
+                  ) : (
+                    <>
+                      <GitCompare className="h-4 w-4" />
+                      {t("選擇比對")}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
-          </DndContext>
+
+            {compareMode === CompareMode.SELECTING && (
+              <div className="bg-muted p-3 rounded-md text-sm">
+                <p>{t("請選擇兩個 JSON 進行比對")}</p>
+                {selectedItems.first && (
+                  <p className="mt-1">
+                    {t("已選擇")} 1: {selectedItems.first.name}
+                  </p>
+                )}
+                {selectedItems.second && (
+                  <p className="mt-1">
+                    {t("已選擇")} 2: {selectedItems.second.name}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <SortableContext items={history.map(item => item.id)}>
+                  {history.map(item => (
+                    <SortableCard
+                      key={item.id}
+                      item={item}
+                      onRemove={removeFromHistory}
+                      onLoad={loadFromHistory}
+                      onSelect={setSelectedItem}
+                      onNameChange={updateHistoryName}
+                      editingName={editingName}
+                      setEditingName={setEditingName}
+                      compareMode={compareMode}
+                      selectedItems={selectedItems}
+                      onCompareSelect={handleCompareSelect}
+                      t={t}
+                    />
+                  ))}
+                </SortableContext>
+              </div>
+            </DndContext>
+          </>
         )}
 
         <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
@@ -301,6 +396,8 @@ export function JsonEditor() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <JsonCompare open={compareDialogOpen} onOpenChange={setCompareDialogOpen} leftItem={selectedItems.first} rightItem={selectedItems.second} t={t} />
 
         <div className="flex flex-col md:flex-row gap-6">
           <JsonInput input={input} setInput={setInput} setOutput={setOutput} setError={setError} error={error} formatJson={formatJson} minifyJson={minifyJson} t={t} />
