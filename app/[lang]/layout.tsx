@@ -7,6 +7,7 @@ import { translate } from "../i18n/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "sonner";
+import { PostHogProvider } from "../providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,16 +35,18 @@ export default async function RootLayout({ children, params }: { children: React
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange storageKey="json-tools-theme">
-          <div className="min-h-screen bg-background">
-            <header className="p-4 border-b flex justify-between items-center">
-              <LanguageSwitcher />
-              <ThemeToggle />
-            </header>
-            {children}
-          </div>
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange storageKey="json-tools-theme">
+            <div className="min-h-screen bg-background">
+              <header className="p-4 border-b flex justify-between items-center">
+                <LanguageSwitcher />
+                <ThemeToggle />
+              </header>
+              {children}
+            </div>
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
