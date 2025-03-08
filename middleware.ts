@@ -5,6 +5,11 @@ import { i18n } from "./app/i18n/settings";
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // 排除 sitemap 相關的路徑
+  if (pathname.includes("sitemap") || pathname.includes("robots.txt")) {
+    return NextResponse.next();
+  }
+
   // 檢查路徑是否已包含完整的語言代碼
   const pathnameHasLocale = i18n.locales.some(locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`);
 
@@ -43,5 +48,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sitemap|robots.txt).*)"],
 };
