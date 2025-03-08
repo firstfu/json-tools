@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://jsontool.ailoop.uk
+
+# Sitemaps
+Sitemap: https://jsontool.ailoop.uk/sitemap.xml
