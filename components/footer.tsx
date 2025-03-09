@@ -97,12 +97,12 @@ export function Footer() {
                 strokeLinejoin="round"
                 className="w-5 h-5 mr-2 text-primary"
               >
-                <path d="M3 3v18h18"></path>
-                <path d="m19 9-5 5-4-4-3 3"></path>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
               </svg>
-              <h3 className="text-base font-semibold">{t("高效能")}</h3>
+              <h3 className="text-base font-semibold">{t("JSON 比對")}</h3>
             </div>
-            <p className="text-xs text-muted-foreground">{t("快速處理大型複雜的 JSON 資料")}</p>
+            <p className="text-xs text-muted-foreground">{t("輕鬆比較不同 JSON 檔案的差異")}</p>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  {t("巢狀 JSON 解析")}
+                  {t("JSON 比對")}
                 </Link>
               </li>
               <li>

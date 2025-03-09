@@ -48,8 +48,8 @@ export function Header() {
                 <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary mb-3">
                   <Zap className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{t("智慧解析")}</h3>
-                <p className="text-sm text-muted-foreground">{t("自動檢測並修復常見格式問題")}</p>
+                <h3 className="text-lg font-semibold mb-2">{t("JSON 比對")}</h3>
+                <p className="text-sm text-muted-foreground">{t("輕鬆比較不同 JSON 檔案的差異")}</p>
               </div>
             </div>
 

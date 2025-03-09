@@ -15,6 +15,8 @@ export const en = {
   快速搜尋並高亮顯示匹配結果: "Quickly search and highlight matching results",
   資料隱私: "Data Privacy",
   "所有處理在本地完成，確保資料安全": "All processing is done locally to ensure data security",
+  "JSON 比對": "JSON Compare",
+  "輕鬆比較不同 JSON 檔案的差異": "Easily compare differences between JSON files",
 
   // Additional Features for Footer
   開發友好: "Developer Friendly",
