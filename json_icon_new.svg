@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="1024" height="1024" rx="128" fill="#121826"/>
+
+  <!-- 左大括號 -->
+  <path d="M384 256C348.6 256 320 284.6 320 320V448C320 483.4 291.4 512 256 512C291.4 512 320 540.6 320 576V704C320 739.4 348.6 768 384 768"
+        stroke="#38BDF8" stroke-width="80" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 右大括號 -->
+  <path d="M640 256C675.4 256 704 284.6 704 320V448C704 483.4 732.6 512 768 512C732.6 512 704 540.6 704 576V704C704 739.4 675.4 768 640 768"
+        stroke="#38BDF8" stroke-width="80" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 中間點 -->
+  <circle cx="512" cy="384" r="40" fill="#38BDF8"/>
+
+  <!-- 中間冒號的下半部分 -->
+  <circle cx="512" cy="640" r="40" fill="#38BDF8"/>
+</svg>
