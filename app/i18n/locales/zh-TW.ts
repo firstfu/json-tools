@@ -57,6 +57,21 @@ export const zhTW = {
   "下載為 CSV": "下載為 CSV",
   "CSV 下載成功": "CSV 下載成功",
 
+  // JSON Schema 預覽相關
+  "預覽 Schema": "預覽 Schema",
+  "生成 Schema": "生成 Schema",
+  "JSON Schema 預覽": "JSON Schema 預覽",
+  "JSON 數據預覽": "JSON 數據預覽",
+  "生成的 JSON Schema": "生成的 JSON Schema",
+  "這是普通 JSON 數據，非 Schema": "這是普通 JSON 數據，非 Schema",
+  "生成的範例 JSON": "生成的範例 JSON",
+  "無法解析 JSON Schema": "無法解析 JSON Schema",
+  "無效的 JSON Schema": "無效的 JSON Schema",
+  "無效的 JSON 格式": "無效的 JSON 格式",
+  "無法解析 JSON 數據": "無法解析 JSON 數據",
+  "作為 Schema 預覽": "作為 Schema 預覽",
+  "無效的 JSON Schema 格式": "無效的 JSON Schema 格式",
+
   // JSON 範例
   json_example: `{
   "name": "小明",

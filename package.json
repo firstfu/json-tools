@@ -20,6 +20,8 @@
         "@radix-ui/react-toast": "^1.2.6",
         "@types/react-syntax-highlighter": "^15.5.13",
         "@vercel/analytics": "^1.5.0",
+        "ajv": "^8.17.1",
+        "ajv-formats": "^3.0.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "jsonpath-plus": "^10.3.0",

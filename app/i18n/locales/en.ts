@@ -57,6 +57,21 @@ export const en = {
   "下載為 CSV": "Download as CSV",
   "CSV 下載成功": "CSV download successful",
 
+  // JSON Schema Preview Related
+  "預覽 Schema": "Preview Schema",
+  "生成 Schema": "Generate Schema",
+  "JSON Schema 預覽": "JSON Schema Preview",
+  "JSON 數據預覽": "JSON Data Preview",
+  "生成的 JSON Schema": "Generated JSON Schema",
+  "這是普通 JSON 數據，非 Schema": "This is plain JSON data, not a Schema",
+  "生成的範例 JSON": "Generated Example JSON",
+  "無法解析 JSON Schema": "Unable to parse JSON Schema",
+  "無效的 JSON Schema": "Invalid JSON Schema",
+  "無效的 JSON 格式": "Invalid JSON Format",
+  "無法解析 JSON 數據": "Unable to parse JSON data",
+  "作為 Schema 預覽": "Preview as Schema",
+  "無效的 JSON Schema 格式": "Invalid JSON Schema Format",
+
   // JSON Example
   json_example: `{
   "name": "John",

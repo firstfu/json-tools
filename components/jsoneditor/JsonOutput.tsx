@@ -8,10 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { Copy, Download, MoreVertical, Search, History, ChevronUp, ChevronDown, FileText } from "lucide-react";
+import { Copy, Download, MoreVertical, Search, History, ChevronUp, ChevronDown, FileText, Eye } from "lucide-react";
 import type { TranslationKey } from "@/app/i18n/utils";
 import type { EditorOnMount } from "./types";
 import { jsonToCSV } from "./utils";
+import { JsonSchemaPreview } from "./JsonSchemaPreview";
+import { DirectSchemaPreview } from "./DirectSchemaPreview";
+import ReactDOM from "react-dom/client";
 
 interface JsonOutputProps {
   output: string;
@@ -73,6 +76,18 @@ export function JsonOutput({
     },
     [t]
   );
+
+  // 檢查字符串是否可能是 JSON Schema
+  const isJsonSchema = (jsonStr: string): boolean => {
+    try {
+      const obj = JSON.parse(jsonStr);
+      return (
+        obj && typeof obj === "object" && !Array.isArray(obj) && (obj.$schema !== undefined || obj.type !== undefined || obj.properties !== undefined || obj.items !== undefined)
+      );
+    } catch (error) {
+      return false;
+    }
+  };
 
   return (
     <div className="flex flex-col md:w-1/2">
@@ -206,34 +221,40 @@ export function JsonOutput({
           </div>
           <div className="h-full flex flex-col">
             {output ? (
-              <MonacoEditor
-                height="600px"
-                defaultLanguage="json"
-                value={output}
-                theme={theme === "dark" ? "vs-dark" : "light"}
-                className="min-h-[600px] flex-grow"
-                onMount={handleEditorDidMount}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: true },
-                  folding: true,
-                  foldingHighlight: true,
-                  foldingStrategy: "auto",
-                  showFoldingControls: "always",
-                  matchBrackets: "always",
-                  automaticLayout: true,
-                  formatOnPaste: true,
-                  scrollBeyondLastLine: false,
-                  find: {
-                    addExtraSpaceOnTop: false,
-                    seedSearchStringFromSelection: "never",
-                    cursorMoveOnType: false,
-                    autoFindInSelection: "never",
-                  },
-                  // 添加自定義 CSS 類別
-                  extraEditorClassName: "custom-find-match",
-                }}
-              />
+              <>
+                <div className="flex items-center justify-center gap-2 mb-2 px-2">
+                  {/* 移除調試按鈕，僅保留 Schema 預覽組件 */}
+                  {output && <DirectSchemaPreview schema={output} t={t} />}
+                </div>
+                <MonacoEditor
+                  height="600px"
+                  defaultLanguage="json"
+                  value={output}
+                  theme={theme === "dark" ? "vs-dark" : "light"}
+                  className="min-h-[600px] flex-grow"
+                  onMount={handleEditorDidMount}
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: true },
+                    folding: true,
+                    foldingHighlight: true,
+                    foldingStrategy: "auto",
+                    showFoldingControls: "always",
+                    matchBrackets: "always",
+                    automaticLayout: true,
+                    formatOnPaste: true,
+                    scrollBeyondLastLine: false,
+                    find: {
+                      addExtraSpaceOnTop: false,
+                      seedSearchStringFromSelection: "never",
+                      cursorMoveOnType: false,
+                      autoFindInSelection: "never",
+                    },
+                    // 添加自定義 CSS 類別
+                    extraEditorClassName: "custom-find-match",
+                  }}
+                />
+              </>
             ) : (
               <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 font-mono text-muted-foreground text-sm flex-grow">
                 {t("格式化結果將顯示在這裡...")}
